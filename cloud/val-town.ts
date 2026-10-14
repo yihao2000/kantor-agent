@@ -32,9 +32,7 @@ export default async function (req: Request): Promise<Response> {
 
   if (req.method === "POST") {
     const body = await req.json().catch(() => null);
-    const sid = clip(body?.sid, 80).replace(/[^\w-]/g, "");
-    if (!sid) return json({ error: "sid kosong" }, 400);
-    if (body.op === "meta") {
+    if (body?.op === "meta") {
       const key = clip(body.key, 170);
       if (!key) return json({ error: "key kosong" }, 400);
       const meta = await readMeta();
@@ -48,6 +46,8 @@ export default async function (req: Request): Promise<Response> {
       await blob.setJSON(META, meta);
       return json({ ok: true, meta });
     }
+    const sid = clip(body?.sid, 80).replace(/[^\w-]/g, "");
+    if (!sid) return json({ error: "sid kosong" }, 400);
     if (body.gone) {
       await blob.delete(PREFIX + sid);
       return json({ ok: true });
