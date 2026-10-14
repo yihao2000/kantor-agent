@@ -1,14 +1,18 @@
 #!/bin/bash
 # Kantor Agent for cloud sessions. Put this in the cloud environment's setup script:
-#   curl -fsSL https://raw.githubusercontent.com/yihao2000/kantor-agent/main/cloud/setup.sh | bash
-# It installs the reporter and adds hooks to ~/.claude/settings.json, so every
-# cloud session in this environment shows up in the office. Needs KANTOR_RELAY
-# set in the environment's variables.
+#   curl -fsSL https://raw.githubusercontent.com/yihao2000/kantor-agent/main/cloud/setup.sh | bash -s 'https://<val>.val.run/?key=<kunci>'
+# It installs the reporter, saves the relay address, and adds hooks to
+# ~/.claude/settings.json, so every cloud session in this environment shows up
+# in the office. The address can also come from KANTOR_RELAY instead.
 set -e
 DIR="$HOME/.claude/kantor-agent"
 mkdir -p "$DIR"
 curl -fsSL https://raw.githubusercontent.com/yihao2000/kantor-agent/main/cloud/report.py -o "$DIR/report.py"
 chmod +x "$DIR/report.py"
+if [ -n "$1" ]; then
+  printf '%s\n' "$1" > "$DIR/relay.txt"
+  chmod 600 "$DIR/relay.txt"
+fi
 
 python3 - "$HOME/.claude/settings.json" "$DIR/report.py" <<'PY'
 import json, os, sys

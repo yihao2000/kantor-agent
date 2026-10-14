@@ -41,8 +41,8 @@ Sesi cloud (Claude Code di web, aplikasi desktop dengan environment cloud, routi
 2. **Di Mac:** ketik `/kantor-relay <alamat relay>` di sesi Claude Code mana pun. Kantor 3D langsung ikut membaca relay.
 3. **Di environment cloud** (Choose environment, lalu edit environment-nya):
    - Network access: **Custom**, centang default domains, tambahkan `*.val.run`.
-   - Environment variables: `KANTOR_RELAY=<alamat relay>`
-   - Setup script: `curl -fsSL https://raw.githubusercontent.com/yihao2000/kantor-agent/main/cloud/setup.sh | bash`
+   - Setup script: `curl -fsSL https://raw.githubusercontent.com/yihao2000/kantor-agent/main/cloud/setup.sh | bash -s '<alamat relay>'`
+   - (Atau isi alamat relay di environment variable `KANTOR_RELAY` kalau environment-nya punya kolom itu.)
 
 Sesi cloud baru di environment itu otomatis masuk kantor. Chat biasa di aplikasi Claude belum bisa, karena di sana nggak ada tempat untuk memasang hook.
 
