@@ -129,6 +129,7 @@ export const register: Register = on => {
     await poll($)
     await publish($)
     $.clock.every(4000, async () => {
+      await loadRelay($).catch(() => undefined)
       await poll($)
       await publish($)
     })
