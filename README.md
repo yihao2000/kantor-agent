@@ -46,6 +46,14 @@ Sesi cloud (Claude Code di web, aplikasi desktop dengan environment cloud, routi
 
 Sesi cloud baru di environment itu otomatis masuk kantor. Chat biasa di aplikasi Claude belum bisa, karena di sana nggak ada tempat untuk memasang hook.
 
+## Pasang di akun Claude (termasuk mode kerja di aplikasi Claude)
+
+Plugin ini punya dua cara lapor: mod untuk Claude Code, dan hook biasa (`cloud/report.py`) untuk mode kerja di aplikasi Claude yang memuat hook plugin. Di mana mod jalan, hook biasa otomatis diam supaya laporannya nggak dobel.
+
+Supaya sesi di aplikasi Claude tahu alamat relay-mu tanpa disetel tiap kali, buat salinan pribadi: taruh file `relay.txt` berisi alamat relay di folder utama plugin, zip foldernya, lalu unggah lewat **Customize > Plugins > Add > Upload plugin**. Jangan unggah salinan yang berisi `relay.txt` ke repo publik.
+
+Chat biasa tetap nggak bisa: di sana hook plugin diabaikan.
+
 ## Batasan
 
 - Tanpa relay, kantor gabungan hanya mencakup sesi di komputer yang sama.

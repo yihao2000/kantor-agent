@@ -18,11 +18,15 @@ CONF = os.path.join(HOME, ".claude", "kantor-agent", "relay.txt")
 IDLE_FORGET_S = 5 * 60
 
 
+PLUGIN_CONF = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "relay.txt")
+
+
 def relay_url():
     url = os.environ.get("KANTOR_RELAY", "").strip()
-    if not url and os.path.exists(CONF):
-        with open(CONF) as f:
-            url = f.read().strip()
+    for path in (CONF, PLUGIN_CONF):
+        if not url and os.path.exists(path):
+            with open(path) as f:
+                url = f.read().strip()
     return url
 
 
@@ -60,6 +64,9 @@ def tool_label(name, inp):
 
 
 def main():
+    # Where the Kantor Agent mod runs (Claude Code), it reports by itself.
+    if os.environ.get("KANTOR_MOD") == "1":
+        return
     url = relay_url()
     if not url:
         return

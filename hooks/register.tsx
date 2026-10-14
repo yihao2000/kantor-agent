@@ -39,7 +39,11 @@ let relayAt = 0
 async function loadRelay($: EngineInterface) {
   const fromEnv = ((await $.env.get('KANTOR_RELAY').catch(() => undefined)) ?? '').trim()
   let fromFile = ''
-  if (outDir && (await $.fs.exists(`${outDir}/relay.txt`).catch(() => false))) fromFile = (await $.fs.read(`${outDir}/relay.txt`)).trim()
+  // ~/.claude/kantor-agent/relay.txt (set by /kantor-relay), else one shipped inside a private copy of the plugin
+  for (const path of [outDir && `${outDir}/relay.txt`, `${$.plugin.root}/relay.txt`]) {
+    if (fromFile || !path) continue
+    if (await $.fs.exists(path).catch(() => false)) fromFile = (await $.fs.read(path)).trim()
+  }
   relayUrl = /^https?:\/\//.test(fromEnv) ? fromEnv : /^https?:\/\//.test(fromFile) ? fromFile : ''
 }
 
@@ -105,6 +109,8 @@ async function poll($: EngineInterface) {
 
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
+    // The plugin's classic hooks (cloud/report.py) stand down where this mod runs.
+    await $.env.set('KANTOR_MOD', '1').catch(() => undefined)
     const now = await $.clock.now()
     sid = await $.session.id()
     const cwd = (await $.session.cwd()).replace(/\/+$/, '')
