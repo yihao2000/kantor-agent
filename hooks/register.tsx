@@ -2,6 +2,7 @@ import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
 import type { KantorAgent, KantorOffice, KantorRemote } from '../types'
+import { PAGE } from './page'
 import { addSubagent, buildSvg, emptyOffice, endWork, LOOKS, MAIN, mergeOffices, noteTool, prune, startWork, toolLabel } from './office'
 
 const PANE = 'kantor-agent'
@@ -15,7 +16,11 @@ const ALIVE_MS = 20_000
 const FORGET_MS = 10 * 60_000
 
 const taskFrom = (text: string) => {
-  const t = text.replace(/\s+/g, ' ').trim()
+  const t = text
+    .replace(/<([a-z][\w-]*)[^>]*>[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
   return t.length > 60 ? t.slice(0, 59) + '…' : t
 }
 const ago = (ms: number) => (ms < 60000 ? `${Math.max(1, Math.round(ms / 1000))}d` : `${Math.round(ms / 60000)}m`)
@@ -24,12 +29,34 @@ const ensure = (o: KantorOffice, now: number) => (o.agents.length ? o : emptyOff
 let sid = ''
 let label = ''
 let lastSeen = ''
+/** Where the 3D page and its roster live: ~/.claude/kantor-agent */
+let outDir = ''
+
+/** Writes roster.js, the live data the 3D page reloads every 1.5 seconds. */
+async function writeRoster($: EngineInterface) {
+  if (!sid || !outDir) return
+  const now = await $.clock.now()
+  const own = await read($, office)
+  const others = await read($, remote)
+  const sessions = [{ sid, label, at: now, agents: own.agents }, ...others]
+  await $.fs.write(`${outDir}/roster.js`, `window.__kantor(${JSON.stringify({ at: now, sessions })})\n`)
+}
+
+/** Writes the 3D page when it is missing or older than this version of the mod. */
+async function ensurePage($: EngineInterface) {
+  if (!outDir) return ''
+  const path = `${outDir}/index.html`
+  const current = (await $.fs.exists(path)) ? await $.fs.read(path) : ''
+  if (current !== PAGE) await $.fs.write(path, PAGE)
+  return path
+}
 
 /** Writes this session's roster to the shared store, for the other sessions' panels. */
 async function publish($: EngineInterface) {
   if (!sid) return
   const o = await read($, office)
   await $.store.set(KEY + sid, { sid, label, at: await $.clock.now(), agents: o.agents })
+  await writeRoster($)
 }
 
 /** Reads the other sessions' rosters; redraws only when one of them changed. */
@@ -53,19 +80,27 @@ export const register: Register = on => {
     const now = await $.clock.now()
     sid = await $.session.id()
     const cwd = (await $.session.cwd()).replace(/\/+$/, '')
-    label = cwd.split('/').pop() || ''
+    const home = ((await $.env.get('HOME').catch(() => undefined)) ?? '').replace(/\/+$/, '')
+    label = !cwd || cwd === home ? 'Claude' : cwd.split('/').pop() || 'Claude'
+    if (home) outDir = `${home}/.claude/kantor-agent`
+    try {
+      await ensurePage($)
+    } catch {
+      // the panel still works without the 3D page
+    }
     await update($, office, o => ensure(o, now))
     try {
       await $.command.register({ name: 'kantor', description: 'Buka panel Kantor Agent: semua sesi dan sub agent, kerja atau santai' })
+      await $.command.register({ name: 'kantor-3d', description: 'Buka kantor 3D live di browser: semua sesi dan sub agent di komputer ini' })
       void $.ui.open({ id: PANE, title: TITLE }).catch(() => undefined)
     } catch {
       // a surface without panes still reports this session to the others
     }
-    await publish($)
     await poll($)
+    await publish($)
     $.clock.every(4000, async () => {
-      await publish($)
       await poll($)
+      await publish($)
     })
     $.clock.every(30000, async () => {
       const t = await $.clock.now()
@@ -84,6 +119,21 @@ export const register: Register = on => {
     await update($, office, o => ensure(o, now))
     const { isPlaced } = await $.ui.open({ id: PANE, title: TITLE })
     return { text: isPlaced ? 'Panel Kantor Agent dibuka.' : 'Panel Kantor Agent belum bisa ditampilkan di layar ini.' }
+  })
+
+  on('command.run', { command: 'kantor-3d' }, async $ => {
+    const path = await ensurePage($)
+    if (!path) return { text: 'Kantor 3D belum bisa dibuka: folder rumah (HOME) nggak ketemu.' }
+    await writeRoster($)
+    for (const opener of ['open', 'xdg-open']) {
+      try {
+        const { exitCode } = await $.process.run([opener, path])
+        if (exitCode === 0) return { text: `Kantor 3D dibuka di browser (${path}).` }
+      } catch {
+        // try the next opener
+      }
+    }
+    return { text: `Buka file ini di browser: ${path}` }
   })
 
   // The main loop: Claude sits down when a turn starts and stands up when it ends.

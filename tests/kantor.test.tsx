@@ -69,10 +69,34 @@ test('sessions on the same computer share one office', async ($, on) => {
   on('command.register', () => ({ value: {} }) as never)
   on('ui.open', () => ({ value: { isPlaced: true } }) as never)
   on('session.start', (_$, e) => ({ cwd: e.cwd }) as never)
+  mock.env(on, { HOME: '/Users/kamu' })
+  const files = new Map<string, string>()
+  on('fs.exists', (_$, e) => ({ value: files.has((e as { path: string }).path) }) as never)
+  on('fs.read', (_$, e) => ({ value: files.get((e as { path: string }).path) ?? '' }) as never)
+  on('fs.write', (_$, e) => {
+    const w = e as { path: string; text: string }
+    files.set(w.path, w.text)
+    return { value: undefined } as never
+  })
   await $.session.start({ cwd: '/Users/kamu/kantor', surface: 'desktop', isInteractive: true, startedAt: now } as never)
+
+  // the 3D page and its live roster land in ~/.claude/kantor-agent
+  expect(files.get('/Users/kamu/.claude/kantor-agent/index.html')?.includes('KANTOR AGENT')).toBe(true)
+  const roster = files.get('/Users/kamu/.claude/kantor-agent/roster.js') ?? ''
+  expect(roster.startsWith('window.__kantor(')).toBe(true)
+  expect(roster.includes('blog-saya') && roster.includes('"label":"kantor"')).toBe(true)
 
   const desk = await $.ui.mount({ ...PANE, surface: 'desktop' })
   expect(await desk.find({ text: /2 sesi/ })).toBeDefined()
   expect(await desk.find({ text: 'blog-saya' })).toBeDefined()
   await desk.unmount()
+})
+
+test('task text drops the tags the engine adds around a prompt', async ($, on) => {
+  mock.clock(on)
+  on('turn.start', ($, e) => ({ turnId: e.turnId }))
+  await $.turn.start({ text: '<system-reminder>zona waktu</system-reminder>Rapikan landing page', turnId: 't9' })
+  const term = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  expect(await term.find({ text: /zona waktu/ })).toBeUndefined()
+  await term.unmount()
 })

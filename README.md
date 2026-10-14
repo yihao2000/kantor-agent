@@ -9,6 +9,12 @@ Mod untuk Claude Code yang menampilkan kantor isometrik di panel samping. Tiap s
 
 Panel terbuka otomatis saat sesi dimulai. Kalau ketutup, ketik `/kantor`.
 
+## Kantor 3D
+
+Ketik `/kantor-3d` di sesi Claude Code mana pun. Kantor 3D terbuka di browser: bisa diputar dan di-zoom, karyawan jalan ke meja dan ngetik saat sesinya kerja, sub agent masuk lewat pintu depan, dan sesi yang ditutup pulang.
+
+Halaman dan datanya ada di `~/.claude/kantor-agent/`. Setiap sesi Claude Code menulis `roster.js` di sana, dan halamannya membaca ulang file itu tiap 1,5 detik. Butuh internet untuk memuat library 3D-nya.
+
 ## Install
 
 Di prompt sesi terminal:
@@ -37,4 +43,5 @@ Di aplikasi desktop, tempat `/plugin` tidak jalan: klik + di samping kotak promp
 
 - `hooks/register.tsx`: hook yang membaca giliran kerja, sub agent, dan tool call, plus panelnya.
 - `hooks/office.ts`: posisi karyawan, jalur jalan, dan gambar SVG kantornya.
+- `app/kantor-3d.html`: kantor 3D. Setelah mengubahnya, jalankan `node scripts/build-page.mjs` supaya `hooks/page.ts` ikut diperbarui.
 - `tests/`: jalankan dengan `claude plugin test .`
