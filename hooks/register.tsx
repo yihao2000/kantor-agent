@@ -28,6 +28,13 @@ const ensure = (o: KantorOffice, now: number) => (o.agents.length ? o : emptyOff
 
 let sid = ''
 let label = ''
+/** True while the session's folder says nothing about it (a conversation in the Claude app runs in /home/claude): it is named after its first request instead. */
+let namedByTask = false
+const GENERIC_DIRS = new Set(['claude', 'root', 'home', 'workspace', 'tmp', 'user', ''])
+const nameFromTask = (task: string) => {
+  const t = task.replace(/[^\p{L}\p{N} ]+/gu, ' ').replace(/\s+/g, ' ').trim()
+  return 'Chat · ' + (t.length > 18 ? t.slice(0, 17).trimEnd() + '…' : t || 'baru')
+}
 let lastSeen = ''
 /** Where the 3D page and its roster live: ~/.claude/kantor-agent */
 let outDir = ''
@@ -57,7 +64,7 @@ async function postRelay($: EngineInterface, agents: KantorAgent[], gone = false
   relaySig = sig
   relayAt = now
   try {
-    await $.http.fetch(relayUrl, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sid, label, from: 'mac', gone, agents: slim }) })
+    await $.http.fetch(relayUrl, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sid, label, from: label.startsWith('Chat · ') ? 'chat' : 'mac', gone, agents: slim }) })
   } catch {
     // the office still works locally when the relay is unreachable
   }
@@ -115,7 +122,9 @@ export const register: Register = on => {
     sid = await $.session.id()
     const cwd = (await $.session.cwd()).replace(/\/+$/, '')
     const home = ((await $.env.get('HOME').catch(() => undefined)) ?? '').replace(/\/+$/, '')
-    label = !cwd || cwd === home ? 'Claude' : cwd.split('/').pop() || 'Claude'
+    const base = cwd.split('/').pop() || ''
+    namedByTask = GENERIC_DIRS.has(base.toLowerCase()) && cwd !== home
+    label = !cwd || cwd === home ? 'Claude' : namedByTask ? 'Chat · baru' : base
     if (home) outDir = `${home}/.claude/kantor-agent`
     try {
       await loadRelay($)
@@ -189,7 +198,12 @@ export const register: Register = on => {
   on('turn.start', async ($, e, next) => {
     const now = await $.clock.now()
     const id = e.agentId ?? MAIN
-    await update($, office, o => startWork(ensure(o, now), id, e.agentId ? '' : taskFrom(e.text) || 'Lanjut kerja', now))
+    const task = e.agentId ? '' : taskFrom(e.text)
+    if (namedByTask && task) {
+      label = nameFromTask(task)
+      namedByTask = false
+    }
+    await update($, office, o => startWork(ensure(o, now), id, task || 'Lanjut kerja', now))
     await publish($)
     return next(e)
   })

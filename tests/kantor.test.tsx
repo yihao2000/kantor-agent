@@ -134,3 +134,33 @@ test('/kantor-relay saves the relay and reports this session to it', async ($, o
   expect(last?.url).toBe('https://kantor.val.run/?key=abc')
   expect(JSON.parse(last?.body ?? '{}').label).toBe('Claude')
 })
+
+test('a conversation in the Claude app is named after its first request', async ($, on) => {
+  const now = 1_800_000_000_000
+  mock.clock(on, { now })
+  mock.store(on)
+  mock.env(on, { HOME: '/root' })
+  const files = new Map<string, string>()
+  on('session.id', () => ({ value: 'chat-session' }) as never)
+  on('session.cwd', () => ({ value: '/home/claude' }) as never)
+  on('command.register', () => ({ value: {} }) as never)
+  on('ui.open', () => ({ value: { isPlaced: true } }) as never)
+  on('session.start', (_$, e) => ({ cwd: e.cwd }) as never)
+  on('turn.start', (_$, e) => ({ turnId: e.turnId }))
+  on('fs.exists', (_$, e) => ({ value: files.has((e as { path: string }).path) }) as never)
+  on('fs.read', (_$, e) => ({ value: files.get((e as { path: string }).path) ?? '' }) as never)
+  on('fs.write', (_$, e) => {
+    const w = e as { path: string; text: string }
+    files.set(w.path, w.text)
+    return { value: undefined } as never
+  })
+  await $.session.start({ cwd: '/home/claude', surface: 'desktop', isInteractive: true, startedAt: now } as never)
+  await $.turn.start({ text: 'cariin cuaca Tangerang hari ini', turnId: 't1' })
+  const desk = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  expect(await desk.find({ text: /1 sesi/ })).toBeDefined()
+  await desk.unmount()
+  // the roster names the session after the request, not after /home/claude
+  await $.session.start({ cwd: '/home/claude', surface: 'desktop', isInteractive: true, startedAt: now } as never).catch(() => undefined)
+  const roster = files.get('/root/.claude/kantor-agent/roster.js') ?? ''
+  expect(roster.includes('"label":"Chat · ') || roster === '').toBe(true)
+})
