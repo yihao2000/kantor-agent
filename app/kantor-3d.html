@@ -596,7 +596,7 @@ function sync(){
   for(const s of liveSessions()){
     (s.agents||[]).forEach(a=>{
       const key=s.sid+':'+a.id;seen.add(key);
-      const name=(a.id==='main'?(s.label||'Claude'):(a.name||'Agent')).slice(0,16);
+      const name=(a.id==='main'?(s.label||'Claude'):(a.name||'Agent')).slice(0,24);
       let ag=agents.get(key);
       if(!ag){
         const desk=DESKS.find(d=>!d.owner)||null;

@@ -31,6 +31,42 @@ let label = ''
 /** True while the session's folder says nothing about it (a conversation in the Claude app runs in /home/claude): it is named after its first request instead. */
 let namedByTask = false
 const GENERIC_DIRS = new Set(['claude', 'root', 'home', 'workspace', 'tmp', 'user', ''])
+/** What the app sends when it resumes a conversation: not something the person asked. */
+const isFiller = (t: string) => !t || /^continue with the task/i.test(t) || /^lanjut kerja$/i.test(t)
+let titledAt = 0
+let titling = false
+
+/** The person's own requests in this conversation, oldest first. */
+async function userTexts($: EngineInterface): Promise<string[]> {
+  const rows = await $.session.messages().catch(() => [])
+  return rows.filter(r => r.role === 'user').map(r => taskFrom(r.text)).filter(t => !isFiller(t))
+}
+
+/** Names a conversation like the app's own sidebar title: a few words from a quick model call, else its first request. */
+async function nameSession($: EngineInterface) {
+  if (!namedByTask || titling) return
+  const texts = await userTexts($)
+  if (!texts.length || (titledAt && (texts.length < 3 || titledAt >= 3))) return
+  titling = true
+  try {
+    const r = await $.model.complete({
+      model: 'haiku',
+      maxTokens: 24,
+      timeoutMs: 8000,
+      prompt: 'Tulis judul 2 sampai 4 kata untuk percakapan ini, dalam bahasa yang sama dengan pesannya. Hanya judulnya, tanpa tanda kutip dan tanpa titik.\n\nPesan pengguna:\n' + texts.slice(0, 3).map(t => '- ' + t).join('\n'),
+    })
+    const title = r.isAnswered ? r.text.replace(/["'`*.]/g, '').replace(/\s+/g, ' ').trim() : ''
+    label = title ? 'Chat · ' + (title.length > 22 ? title.slice(0, 21).trimEnd() + '…' : title) : nameFromTask(texts[0] ?? '')
+    titledAt = texts.length
+    relaySig = ''
+    await publish($)
+  } catch {
+    label = nameFromTask(texts[0] ?? '')
+  } finally {
+    titling = false
+  }
+}
+
 const nameFromTask = (task: string) => {
   const t = task.replace(/[^\p{L}\p{N} ]+/gu, ' ').replace(/\s+/g, ' ').trim()
   return 'Chat · ' + (t.length > 18 ? t.slice(0, 17).trimEnd() + '…' : t || 'baru')
@@ -198,11 +234,10 @@ export const register: Register = on => {
   on('turn.start', async ($, e, next) => {
     const now = await $.clock.now()
     const id = e.agentId ?? MAIN
-    const task = e.agentId ? '' : taskFrom(e.text)
-    if (namedByTask && task) {
-      label = nameFromTask(task)
-      namedByTask = false
-    }
+    let task = e.agentId ? '' : taskFrom(e.text)
+    if (!e.agentId && isFiller(task)) task = (await userTexts($)).at(-1) ?? ''
+    // titling runs on a timer, outside this turn, so the turn never waits for it
+    if (!e.agentId && namedByTask) $.clock.after(50, () => nameSession($))
     await update($, office, o => startWork(ensure(o, now), id, task || 'Lanjut kerja', now))
     await publish($)
     return next(e)
