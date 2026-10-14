@@ -1,10 +1,10 @@
 // Kantor Agent relay: an HTTP val on Val Town.
 // Every Claude Code session (on your Mac or in the cloud) reports itself here,
-// and the 3D office reads the list back. Set KANTOR_KEY in the val's environment
-// variables, or replace the fallback below with your own secret.
+// and the 3D office reads the list back. The secret key lives in the val's
+// environment variable KANTOR_KEY, never in this code.
 import { blob } from "https://esm.town/v/std/blob/main.ts";
 
-const KEY = Deno.env.get("KANTOR_KEY") ?? "GANTI-DENGAN-KUNCI-RAHASIA";
+const KEY = Deno.env.get("KANTOR_KEY") ?? "";
 const PREFIX = "kantor_s_";
 /** A session that has not reported for this long leaves the office. */
 const ALIVE_MS = 30 * 60_000;
@@ -19,6 +19,7 @@ const clip = (v: unknown, n: number) => String(v ?? "").slice(0, n);
 export default async function (req: Request): Promise<Response> {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
   const url = new URL(req.url);
+  if (!KEY) return json({ error: "KANTOR_KEY belum diisi di Env vars val ini" }, 500);
   if (url.searchParams.get("key") !== KEY) return json({ error: "kunci salah" }, 401);
   const now = Date.now();
 

@@ -37,7 +37,7 @@ Di aplikasi desktop, tempat `/plugin` tidak jalan: klik + di samping kotak promp
 
 Sesi cloud (Claude Code di web, aplikasi desktop dengan environment cloud, routine) nggak memasang plugin. Mereka lapor lewat hook kecil ke server relay milikmu sendiri, dan kantor 3D membaca dari situ.
 
-1. **Bikin relay di Val Town.** Buat HTTP val baru, set ke Private, tempel isi `cloud/val-town.ts`, dan ganti `GANTI-DENGAN-KUNCI-RAHASIA` dengan kunci rahasiamu (atau isi environment variable `KANTOR_KEY` di val itu). Alamat relay-mu: `https://<nama-val>.val.run/?key=<kunci>`.
+1. **Bikin relay di Val Town.** Buat val baru, tempel isi `cloud/val-town.ts`, tambahkan trigger HTTP, lalu di Env vars val itu isi `KANTOR_KEY` dengan kunci rahasiamu. Kuncinya nggak pernah ada di kode, jadi val Public pun aman. Alamat relay-mu: `https://<nama-val>.val.run/?key=<kunci>`.
 2. **Di Mac:** ketik `/kantor-relay <alamat relay>` di sesi Claude Code mana pun. Kantor 3D langsung ikut membaca relay.
 3. **Di environment cloud** (Choose environment, lalu edit environment-nya):
    - Network access: **Custom**, centang default domains, tambahkan `*.val.run`.
