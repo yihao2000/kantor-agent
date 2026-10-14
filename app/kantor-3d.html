@@ -96,7 +96,7 @@ h2{margin:0 0 10px;font-family:var(--f-pixel);font-weight:600;font-size:15px;let
     </div>
     <div class="card"><h2>Sesi</h2><div id="sessions"><p class="none">Belum ada sesi yang jalan.</p></div></div>
     <div class="card"><h2>Aktivitas</h2><ul class="log" id="log"></ul></div>
-    <p class="note">Data diambil dari sesi Claude Code di komputer ini. Halaman ini nggak perlu dibiarin kebuka, buka lagi kapan aja lewat /kantor-3d.</p>
+    <p class="note">Data diambil dari sesi Claude Code di komputer ini, plus sesi cloud lewat relay kalau sudah disambungkan. Buka lagi kapan aja lewat /kantor-3d.</p>
   </aside>
 </div>
 
@@ -565,19 +565,38 @@ class Agent{
 
 /* ---------- live roster: roster.js is rewritten by every Claude Code session on this computer ---------- */
 const agents=new Map();
-let lastRoster=null, lastSeenAt=0;
+let lastSeenAt=0;
 function hash(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return Math.abs(h);}
 const ALIVE_MS=20000;
+/* Two sources: roster.js from the sessions on this computer, and the relay for cloud sessions and other computers. */
+let localData=null, relayData=null, relayAt=0, relayUrl='';
+try{relayUrl=localStorage.getItem('kantor-relay')||'';}catch(e){}
 window.__kantor=function(data){
   if(!data||!Array.isArray(data.sessions))return;
-  lastRoster=data;lastSeenAt=Date.now();
-  const live=Date.now()-data.at<ALIVE_MS;
+  localData=data;lastSeenAt=Date.now();
+  if(data.relay&&data.relay!==relayUrl){relayUrl=data.relay;try{localStorage.setItem('kantor-relay',relayUrl);}catch(e){}pollRelay();}
+  sync();
+};
+async function pollRelay(){
+  if(!relayUrl)return;
+  try{
+    const r=await fetch(relayUrl,{cache:'no-store'});
+    if(r.ok){const d=await r.json();if(d&&Array.isArray(d.sessions)){relayData=d;relayAt=Date.now();lastSeenAt=Date.now();sync();}}
+  }catch(e){}
+}
+setInterval(pollRelay,3000);pollRelay();
+function liveSessions(){
+  const out=new Map();
+  if(localData&&Date.now()-localData.at<ALIVE_MS)for(const s of localData.sessions)if(Date.now()-s.at<ALIVE_MS)out.set(s.sid,s);
+  if(relayData&&Date.now()-relayAt<20000)for(const s of relayData.sessions)if(!out.has(s.sid))out.set(s.sid,s);
+  return[...out.values()];
+}
+function sync(){
   const seen=new Set();
-  if(live)for(const s of data.sessions){
-    if(Date.now()-s.at>ALIVE_MS)continue;
+  for(const s of liveSessions()){
     (s.agents||[]).forEach(a=>{
       const key=s.sid+':'+a.id;seen.add(key);
-      const name=(a.id==='main'?(s.label||'Claude'):(a.name||'Agent')).slice(0,14);
+      const name=(a.id==='main'?(s.label||'Claude'):(a.name||'Agent')).slice(0,16);
       let ag=agents.get(key);
       if(!ag){
         const desk=DESKS.find(d=>!d.owner)||null;
@@ -593,13 +612,13 @@ window.__kantor=function(data){
     });
   }
   for(const[key,ag]of agents)if(!seen.has(key)&&!ag.leaving){log(`${ag.name} pulang`);ag.leave();}
-};
+}
 function pollRoster(){
   const old=document.getElementById('roster');if(old)old.remove();
   const s=document.createElement('script');s.id='roster';s.src='roster.js?t='+Date.now();
   s.onerror=()=>{};document.head.appendChild(s);
 }
-pollRoster();setInterval(pollRoster,1500);
+pollRoster();setInterval(pollRoster,1500);setInterval(sync,5000);
 
 /* ---------- screens ---------- */
 function drawDesk(d,t){
@@ -641,10 +660,10 @@ function renderPanel(){
   let k=0,s=0;
   for(const a of list){const[c]=a.status();if(c==='kerja'||c==='ke-meja')k++;else s++;}
   $('#nKerja').textContent=k;$('#nSantai').textContent=s;$('#nBeres').textContent=totalDone;
-  const fresh=lastRoster&&Date.now()-lastRoster.at<ALIVE_MS;
-  const nSess=fresh?lastRoster.sessions.filter(x=>Date.now()-x.at<ALIVE_MS).length:0;
-  $('#live').classList.toggle('on',!!fresh);
-  $('#liveText').textContent=fresh?`Live dari ${nSess} sesi Claude Code`:(lastSeenAt?'Nggak ada sesi Claude Code yang jalan':'Menunggu sesi Claude Code…');
+  const nSess=liveSessions().length;
+  const cloud=liveSessions().filter(x=>x.from==='cloud').length;
+  $('#live').classList.toggle('on',nSess>0);
+  $('#liveText').textContent=nSess?`Live dari ${nSess} sesi Claude Code${cloud?` (${cloud} di cloud)`:''}`:(lastSeenAt?'Nggak ada sesi Claude Code yang jalan':'Menunggu sesi Claude Code…');
   $('#empty').hidden=list.length>0;
   const groups=new Map();
   for(const a of list){const g=a.session||'Claude';if(!groups.has(g))groups.set(g,[]);groups.get(g).push(a);}

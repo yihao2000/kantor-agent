@@ -100,3 +100,37 @@ test('task text drops the tags the engine adds around a prompt', async ($, on) =
   expect(await term.find({ text: /zona waktu/ })).toBeUndefined()
   await term.unmount()
 })
+
+test('/kantor-relay saves the relay and reports this session to it', async ($, on) => {
+  const now = 1_800_000_000_000
+  mock.clock(on, { now })
+  mock.store(on)
+  mock.env(on, { HOME: '/Users/kamu' })
+  const files = new Map<string, string>()
+  const posts: { url: string; body: string }[] = []
+  on('session.id', () => ({ value: 'mac-session' }) as never)
+  on('session.cwd', () => ({ value: '/Users/kamu' }) as never)
+  on('command.register', () => ({ value: {} }) as never)
+  on('ui.open', () => ({ value: { isPlaced: true } }) as never)
+  on('session.start', (_$, e) => ({ cwd: e.cwd }) as never)
+  on('fs.exists', (_$, e) => ({ value: files.has((e as { path: string }).path) }) as never)
+  on('fs.read', (_$, e) => ({ value: files.get((e as { path: string }).path) ?? '' }) as never)
+  on('fs.write', (_$, e) => {
+    const w = e as { path: string; text: string }
+    files.set(w.path, w.text)
+    return { value: undefined } as never
+  })
+  on('http.fetch', (_$, e) => {
+    const f = e as { url: string; init?: { body?: string } }
+    posts.push({ url: f.url, body: f.init?.body ?? '' })
+    return { value: { status: 200, ok: true, headers: {}, text: '{"ok":true}' } } as never
+  })
+  on('command.run', () => ({ text: '' }) as never)
+  await $.session.start({ cwd: '/Users/kamu', surface: 'desktop', isInteractive: true, startedAt: now } as never)
+  await $.command.run({ command: 'kantor-relay', args: 'https://kantor.val.run/?key=abc' } as never)
+
+  expect(files.get('/Users/kamu/.claude/kantor-agent/relay.txt')?.trim()).toBe('https://kantor.val.run/?key=abc')
+  const last = posts[posts.length - 1]
+  expect(last?.url).toBe('https://kantor.val.run/?key=abc')
+  expect(JSON.parse(last?.body ?? '{}').label).toBe('Claude')
+})

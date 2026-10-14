@@ -31,6 +31,33 @@ let label = ''
 let lastSeen = ''
 /** Where the 3D page and its roster live: ~/.claude/kantor-agent */
 let outDir = ''
+/** The relay that joins sessions across computers and the cloud: KANTOR_RELAY, or relay.txt. */
+let relayUrl = ''
+let relaySig = ''
+let relayAt = 0
+
+async function loadRelay($: EngineInterface) {
+  const fromEnv = ((await $.env.get('KANTOR_RELAY').catch(() => undefined)) ?? '').trim()
+  let fromFile = ''
+  if (outDir && (await $.fs.exists(`${outDir}/relay.txt`).catch(() => false))) fromFile = (await $.fs.read(`${outDir}/relay.txt`)).trim()
+  relayUrl = /^https?:\/\//.test(fromEnv) ? fromEnv : /^https?:\/\//.test(fromFile) ? fromFile : ''
+}
+
+/** Tells the relay who works here: at once when something changed, else every 15 seconds. */
+async function postRelay($: EngineInterface, agents: KantorAgent[], gone = false) {
+  if (!relayUrl || !sid) return
+  const slim = agents.map(a => ({ id: a.id, name: a.name, status: a.status, task: a.task, tool: a.tool }))
+  const sig = JSON.stringify([label, slim, gone])
+  const now = await $.clock.now()
+  if (!gone && sig === relaySig && now - relayAt < 15000) return
+  relaySig = sig
+  relayAt = now
+  try {
+    await $.http.fetch(relayUrl, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sid, label, from: 'mac', gone, agents: slim }) })
+  } catch {
+    // the office still works locally when the relay is unreachable
+  }
+}
 
 /** Writes roster.js, the live data the 3D page reloads every 1.5 seconds. */
 async function writeRoster($: EngineInterface) {
@@ -39,7 +66,7 @@ async function writeRoster($: EngineInterface) {
   const own = await read($, office)
   const others = await read($, remote)
   const sessions = [{ sid, label, at: now, agents: own.agents }, ...others]
-  await $.fs.write(`${outDir}/roster.js`, `window.__kantor(${JSON.stringify({ at: now, sessions })})\n`)
+  await $.fs.write(`${outDir}/roster.js`, `window.__kantor(${JSON.stringify({ at: now, relay: relayUrl, sessions })})\n`)
 }
 
 /** Writes the 3D page when it is missing or older than this version of the mod. */
@@ -57,6 +84,7 @@ async function publish($: EngineInterface) {
   const o = await read($, office)
   await $.store.set(KEY + sid, { sid, label, at: await $.clock.now(), agents: o.agents })
   await writeRoster($)
+  await postRelay($, o.agents)
 }
 
 /** Reads the other sessions' rosters; redraws only when one of them changed. */
@@ -84,6 +112,7 @@ export const register: Register = on => {
     label = !cwd || cwd === home ? 'Claude' : cwd.split('/').pop() || 'Claude'
     if (home) outDir = `${home}/.claude/kantor-agent`
     try {
+      await loadRelay($)
       await ensurePage($)
     } catch {
       // the panel still works without the 3D page
@@ -91,6 +120,7 @@ export const register: Register = on => {
     await update($, office, o => ensure(o, now))
     try {
       await $.command.register({ name: 'kantor', description: 'Buka panel Kantor Agent: semua sesi dan sub agent, kerja atau santai' })
+      await $.command.register({ name: 'kantor-relay', description: 'Sambungkan kantor ke server relay: /kantor-relay <alamat lengkap dengan ?key=...>', argumentHint: '<alamat relay>' })
       await $.command.register({ name: 'kantor-3d', description: 'Buka kantor 3D live di browser: semua sesi dan sub agent di komputer ini' })
       void $.ui.open({ id: PANE, title: TITLE }).catch(() => undefined)
     } catch {
@@ -110,6 +140,7 @@ export const register: Register = on => {
   })
 
   on('session.end', async ($, e, next) => {
+    await postRelay($, [], true)
     if (sid) await $.store.delete(KEY + sid)
     return next(e)
   })
@@ -119,6 +150,17 @@ export const register: Register = on => {
     await update($, office, o => ensure(o, now))
     const { isPlaced } = await $.ui.open({ id: PANE, title: TITLE })
     return { text: isPlaced ? 'Panel Kantor Agent dibuka.' : 'Panel Kantor Agent belum bisa ditampilkan di layar ini.' }
+  })
+
+  on('command.run', { command: 'kantor-relay' }, async ($, e) => {
+    const url = e.args.trim()
+    if (!/^https?:\/\/\S+$/.test(url)) return { text: 'Tulis alamat relay-nya, misalnya: /kantor-relay https://nama.val.run/?key=kuncimu' }
+    if (!outDir) return { text: 'Folder rumah (HOME) nggak ketemu, relay belum bisa disimpan.' }
+    await $.fs.write(`${outDir}/relay.txt`, url + '\n')
+    relayUrl = url
+    relaySig = ''
+    await publish($)
+    return { text: 'Relay tersambung. Sesi ini sekarang lapor ke kantor bersama, dan kantor 3D ikut menampilkan sesi cloud.' }
   })
 
   on('command.run', { command: 'kantor-3d' }, async $ => {

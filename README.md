@@ -33,9 +33,23 @@ claude plugin install kantor-agent --marketplace yihao2000/kantor-agent
 
 Di aplikasi desktop, tempat `/plugin` tidak jalan: klik + di samping kotak prompt, lalu Plugins, Add marketplace dengan `yihao2000/kantor-agent`, lalu Add plugin.
 
+## Sesi cloud dan komputer lain
+
+Sesi cloud (Claude Code di web, aplikasi desktop dengan environment cloud, routine) nggak memasang plugin. Mereka lapor lewat hook kecil ke server relay milikmu sendiri, dan kantor 3D membaca dari situ.
+
+1. **Bikin relay di Val Town.** Buat HTTP val baru, set ke Private, tempel isi `cloud/val-town.ts`, dan ganti `GANTI-DENGAN-KUNCI-RAHASIA` dengan kunci rahasiamu (atau isi environment variable `KANTOR_KEY` di val itu). Alamat relay-mu: `https://<nama-val>.val.run/?key=<kunci>`.
+2. **Di Mac:** ketik `/kantor-relay <alamat relay>` di sesi Claude Code mana pun. Kantor 3D langsung ikut membaca relay.
+3. **Di environment cloud** (Choose environment, lalu edit environment-nya):
+   - Network access: **Custom**, centang default domains, tambahkan `*.val.run`.
+   - Environment variables: `KANTOR_RELAY=<alamat relay>`
+   - Setup script: `curl -fsSL https://raw.githubusercontent.com/yihao2000/kantor-agent/main/cloud/setup.sh | bash`
+
+Sesi cloud baru di environment itu otomatis masuk kantor. Chat biasa di aplikasi Claude belum bisa, karena di sana nggak ada tempat untuk memasang hook.
+
 ## Batasan
 
-- Kantor gabungan hanya mencakup sesi di komputer yang sama. Sesi di komputer lain atau di cloud punya kantornya sendiri.
+- Tanpa relay, kantor gabungan hanya mencakup sesi di komputer yang sama.
+- Sesi cloud yang lama diam (VM-nya dijeda) tetap kelihatan santai sampai 30 menit, lalu pulang sendiri.
 - Di terminal, panel tampil sebagai daftar teks. Gambar kantor tampil di aplikasi desktop.
 - Progress tugas tidak ditampilkan dalam persen, karena agent tidak melaporkannya. Yang tampil adalah status, tool yang dipakai, dan lama kerja.
 
