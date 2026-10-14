@@ -1,0 +1,5 @@
+{
+  "name": "kantor-agent",
+  "owner": { "name": "yihao2000" },
+  "plugins": [{ "name": "kantor-agent", "source": "./" }]
+}
