@@ -13,6 +13,13 @@ Panel terbuka otomatis saat sesi dimulai. Kalau ketutup, ketik `/kantor`.
 
 Ketik `/kantor-3d` di sesi Claude Code mana pun. Kantor 3D terbuka di browser: bisa diputar dan di-zoom, karyawan jalan ke meja dan ngetik saat sesinya kerja, sub agent masuk lewat pintu depan, dan sesi yang ditutup pulang.
 
+Klik karyawan di ruangan atau di daftar Sesi untuk membuka kartu Karyawan:
+
+- **Ganti nama:** isi nama baru (maks. 24 huruf), lalu Simpan nama. Pakai nama asli mengembalikan nama dari sesinya.
+- **Pulangkan:** karyawan jalan keluar lewat pintu. Chat atau sesinya nggak dihapus. Dia baru masuk lagi kalau sesi itu dipakai kerja lagi, dengan nama yang sudah kamu kasih.
+
+Kalau relay dipakai, nama dan daftar yang dipulangkan disimpan di relay, jadi sama di semua perangkat. Tanpa relay, disimpan di browser itu saja.
+
 Halaman dan datanya ada di `~/.claude/kantor-agent/`. Setiap sesi Claude Code menulis `roster.js` di sana, dan halamannya membaca ulang file itu tiap 1,5 detik. Butuh internet untuk memuat library 3D-nya.
 
 ## Install

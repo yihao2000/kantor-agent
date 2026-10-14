@@ -6,6 +6,13 @@ import { blob } from "https://esm.town/v/std/blob/main.ts";
 
 const KEY = Deno.env.get("KANTOR_KEY") ?? "";
 const PREFIX = "kantor_s_";
+/** Names you gave and people you sent home, keyed "<sid>:<agent id>". */
+const META = "kantor_meta";
+type Meta = { names: Record<string, string>; hidden: Record<string, number> };
+const readMeta = async (): Promise<Meta> => {
+  const m = (await blob.getJSON(META)) ?? {};
+  return { names: m.names ?? {}, hidden: m.hidden ?? {} };
+};
 /** A session that has not reported for this long leaves the office. */
 const ALIVE_MS = 30 * 60_000;
 const CORS = {
@@ -27,6 +34,20 @@ export default async function (req: Request): Promise<Response> {
     const body = await req.json().catch(() => null);
     const sid = clip(body?.sid, 80).replace(/[^\w-]/g, "");
     if (!sid) return json({ error: "sid kosong" }, 400);
+    if (body.op === "meta") {
+      const key = clip(body.key, 170);
+      if (!key) return json({ error: "key kosong" }, 400);
+      const meta = await readMeta();
+      if (typeof body.name === "string") {
+        const name = body.name.trim().slice(0, 24);
+        if (name) meta.names[key] = name;
+        else delete meta.names[key];
+      }
+      if (body.hidden === true) meta.hidden[key] = now;
+      if (body.hidden === false) delete meta.hidden[key];
+      await blob.setJSON(META, meta);
+      return json({ ok: true, meta });
+    }
     if (body.gone) {
       await blob.delete(PREFIX + sid);
       return json({ ok: true });
@@ -37,6 +58,7 @@ export default async function (req: Request): Promise<Response> {
       status: a.status === "working" ? "working" : "idle",
       task: clip(a.task, 80),
       tool: clip(a.tool, 60),
+      since: typeof a.since === "number" ? a.since : 0,
     }));
     await blob.setJSON(PREFIX + sid, { sid, label: clip(body.label, 40), from: clip(body.from, 10), agents, at: now });
     return json({ ok: true, at: now });
@@ -52,5 +74,5 @@ export default async function (req: Request): Promise<Response> {
     }
     sessions.push(s);
   }
-  return json({ at: now, sessions });
+  return json({ at: now, sessions, meta: await readMeta() });
 }

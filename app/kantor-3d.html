@@ -29,6 +29,7 @@ button{font:inherit;color:inherit}
 @media (max-width:900px){.stage{height:64vh}}
 #scene{display:block;width:100%;height:100%}
 .labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.labels .name{pointer-events:auto;cursor:pointer}
 .tag{position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:center;gap:4px;will-change:transform}
 .bubble{font-family:var(--f-pixel);font-size:13px;line-height:1.2;background:var(--paper);color:var(--ink);padding:3px 8px 4px;border:2px solid var(--ink);box-shadow:2px 2px 0 var(--ink);white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis}
 .name{font-family:var(--f-pixel);font-weight:600;font-size:12px;letter-spacing:.03em;padding:1px 6px 2px;color:var(--ink);background:var(--c);border:2px solid var(--ink)}
@@ -68,6 +69,22 @@ h2{margin:0 0 10px;font-family:var(--f-pixel);font-weight:600;font-size:15px;let
 .log time{font-family:var(--f-pixel);color:var(--muted);font-variant-numeric:tabular-nums}
 .log li.done span{color:var(--accent)} .log li.start span{color:var(--work)}
 .note{font-size:12px;color:var(--muted);margin:0}
+button.row{width:100%;background:transparent;border:0;border-radius:4px;padding:4px 6px;margin:0 -6px;text-align:left;cursor:pointer;color:inherit}
+button.row:hover{background:var(--raise)}
+button.row.sel{background:var(--raise);outline:2px solid var(--accent)}
+.editor{display:flex;flex-direction:column;gap:10px;border-color:var(--accent)}
+.editor h2{margin:0}
+.ed-who{display:grid;grid-template-columns:14px minmax(0,1fr);gap:10px;align-items:center}
+.ed-who b{display:block;font-size:15px}
+.ed-who small{display:block;color:var(--muted);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.editor label{font-size:12px;color:var(--muted);letter-spacing:.04em}
+.editor input{width:100%;font:inherit;color:var(--fg);background:var(--raise);border:2px solid var(--line);border-radius:3px;padding:7px 9px}
+.ed-row{display:flex;gap:6px;flex-wrap:wrap}
+.btn{font:inherit;font-size:13px;color:var(--fg);background:transparent;border:2px solid var(--line);border-radius:3px;padding:5px 10px;cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--ink);font-weight:700}
+.btn.warn{border-color:var(--off);color:var(--off)}
+.tag.sel .name{outline:2px solid var(--paper);outline-offset:1px}
 </style>
 </head>
 <body>
@@ -94,9 +111,18 @@ h2{margin:0 0 10px;font-family:var(--f-pixel);font-weight:600;font-size:15px;let
         <div class="d"><b id="nBeres">0</b><span>Beres</span></div>
       </div>
     </div>
+    <div class="card editor" id="editor" hidden>
+      <h2>Karyawan</h2>
+      <div class="ed-who"><span class="sw" id="edSw"></span><div><b id="edName">-</b><small id="edFrom">-</small></div></div>
+      <label for="edInput">Nama di kantor</label>
+      <input type="text" id="edInput" maxlength="24" autocomplete="off" placeholder="mis. Admin Leads">
+      <div class="ed-row"><button type="button" class="btn primary" id="edSave">Simpan nama</button><button type="button" class="btn" id="edReset">Pakai nama asli</button></div>
+      <div class="ed-row"><button type="button" class="btn warn" id="edHome">Pulangkan</button><button type="button" class="btn" id="edClose">Tutup</button></div>
+      <p class="note">Karyawan yang dipulangkan baru masuk lagi kalau percakapannya dipakai kerja lagi. Chat-nya sendiri nggak terhapus.</p>
+    </div>
     <div class="card"><h2>Sesi</h2><div id="sessions"><p class="none">Belum ada sesi yang jalan.</p></div></div>
     <div class="card"><h2>Aktivitas</h2><ul class="log" id="log"></ul></div>
-    <p class="note">Data diambil dari sesi Claude Code di komputer ini, plus sesi cloud lewat relay kalau sudah disambungkan. Buka lagi kapan aja lewat /kantor-3d.</p>
+    <p class="note">Klik karyawan di ruangan atau di daftar untuk ganti nama atau memulangkannya. Data diambil dari sesi Claude Code di komputer ini, plus sesi cloud lewat relay kalau sudah disambungkan. Buka lagi kapan aja lewat /kantor-3d.</p>
   </aside>
 </div>
 
@@ -416,6 +442,7 @@ class Agent{
     this.bubbleEl=document.createElement('div');this.bubbleEl.className='bubble';this.bubbleEl.hidden=true;
     this.nameEl=document.createElement('div');this.nameEl.className='name';this.nameEl.textContent=name;this.nameEl.style.setProperty('--c',this.hex);
     tag.append(this.bubbleEl,this.nameEl);labelsEl.append(tag);this.tagEl=tag;
+    this.nameEl.addEventListener('click',()=>select(this.key));
   }
   setName(n){if(n!==this.name){this.name=n;this.nameEl.textContent=n;}}
   cell(){return[Math.min(GW-1,Math.max(0,Math.floor(this.pos.x))),Math.min(GD-1,Math.max(0,Math.floor(this.pos.z)))];}
@@ -581,7 +608,7 @@ async function pollRelay(){
   if(!relayUrl)return;
   try{
     const r=await fetch(relayUrl,{cache:'no-store'});
-    if(r.ok){const d=await r.json();if(d&&Array.isArray(d.sessions)){relayData=d;relayAt=Date.now();lastSeenAt=Date.now();sync();}}
+    if(r.ok){const d=await r.json();if(d&&Array.isArray(d.sessions)){relayData=d;relayAt=Date.now();lastSeenAt=Date.now();takeRelayMeta(d.meta);sync();}}
   }catch(e){}
 }
 setInterval(pollRelay,3000);pollRelay();
@@ -591,13 +618,36 @@ function liveSessions(){
   if(relayData&&Date.now()-relayAt<20000)for(const s of relayData.sessions)if(!out.has(s.sid))out.set(s.sid,s);
   return[...out.values()];
 }
+/* Names you gave and people you sent home. Kept in the relay (shared by every device), else in this browser. */
+let meta={names:{},hidden:{}}, metaHoldUntil=0;
+try{const m=JSON.parse(localStorage.getItem('kantor-meta')||'null');if(m&&m.names&&m.hidden)meta=m;}catch(e){}
+function saveMetaLocal(){try{localStorage.setItem('kantor-meta',JSON.stringify(meta));}catch(e){}}
+function takeRelayMeta(m){if(m&&m.names&&m.hidden&&Date.now()>metaHoldUntil){meta=m;saveMetaLocal();}}
+function setMeta(key,patch,quiet){
+  if('name' in patch){if(patch.name)meta.names[key]=patch.name;else delete meta.names[key];}
+  if(patch.hidden===true)meta.hidden[key]=Date.now();
+  if(patch.hidden===false)delete meta.hidden[key];
+  metaHoldUntil=Date.now()+5000;saveMetaLocal();
+  if(relayUrl)fetch(relayUrl,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({op:'meta',key,...patch})}).catch(()=>{});
+  if(!quiet)sync();
+}
 function sync(){
   const seen=new Set();
   for(const s of liveSessions()){
-    (s.agents||[]).forEach(a=>{
-      const key=s.sid+':'+a.id;seen.add(key);
-      const name=(a.id==='main'?(s.label||'Claude'):(a.name||'Agent')).slice(0,24);
+    for(const a of (s.agents||[])){
+      const key=s.sid+':'+a.id;
+      const hiddenAt=meta.hidden[key]||(a.id!=='main'?meta.hidden[s.sid+':main']:0);
+      const since=a.since||a.startedAt||0;
+      if(hiddenAt){
+        // sent home: back only once this session starts new work
+        if(a.status==='working'&&since>hiddenAt){if(meta.hidden[key])setMeta(key,{hidden:false},true);}
+        else continue;
+      }
+      seen.add(key);
+      const auto=(a.id==='main'?(s.label||'Claude'):(a.name||'Agent')).slice(0,24);
+      const name=(meta.names[key]||auto).slice(0,24);
       let ag=agents.get(key);
+      if(ag&&(ag.leaving||ag.gone)){if(!ag.gone)ag.dispose();agents.delete(key);ag=null;}
       if(!ag){
         const desk=DESKS.find(d=>!d.owner)||null;
         const from=a.id==='main'?(()=>{for(let k=0;k<40;k++){const x=Math.floor(rand(0,GW)),z=Math.floor(rand(3,GD));if(isOpen(x,z))return[x,z];}return DOOR;})():DOOR;
@@ -607,11 +657,11 @@ function sync(){
         agents.set(key,ag);
         log(`${name} masuk kantor`);
       }
-      ag.setName(name);ag.session=s.label||'Claude';
+      ag.autoName=auto;ag.setName(name);ag.session=s.label||'Claude';ag.from=s.from||'';
       if(a.status==='working')ag.work(a.task,a.tool);else ag.rest();
-    });
+    }
   }
-  for(const[key,ag]of agents)if(!seen.has(key)&&!ag.leaving){log(`${ag.name} pulang`);ag.leave();}
+  for(const[key,ag]of agents)if(!seen.has(key)&&!ag.leaving){log(meta.hidden[key]?`${ag.name} dipulangkan`:`${ag.name} pulang`);ag.leave();if(selectedKey===key)select(null);}
 }
 function pollRoster(){
   const old=document.getElementById('roster');if(old)old.remove();
@@ -654,6 +704,7 @@ function drawArcade(){
 }
 
 /* ---------- panel ---------- */
+let lastPanelHtml='';
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function renderPanel(){
   const list=[...agents.values()].filter(a=>!a.gone);
@@ -667,8 +718,46 @@ function renderPanel(){
   $('#empty').hidden=list.length>0;
   const groups=new Map();
   for(const a of list){const g=a.session||'Claude';if(!groups.has(g))groups.set(g,[]);groups.get(g).push(a);}
-  $('#sessions').innerHTML=groups.size?[...groups].map(([label,arr])=>`<div class="sess"><div class="sess-name">${esc(label)}</div>`+arr.map(a=>{const[c,l]=a.status();return`<div class="row"><span class="sw" style="--c:${a.hex}"></span><div class="who"><b>${esc(a.name)}</b><small>${esc(a.activity())}</small></div><span class="chip ${c}">${l}</span></div>`;}).join('')+'</div>').join(''):'<p class="none">Belum ada sesi yang jalan.</p>';
+  const html=groups.size?[...groups].map(([label,arr])=>`<div class="sess"><div class="sess-name">${esc(label)}</div>`+arr.map(a=>{const[c,l]=a.status();return`<button type="button" class="row${a.key===selectedKey?' sel':''}" data-key="${esc(a.key)}"><span class="sw" style="--c:${a.hex}"></span><span class="who"><b>${esc(a.name)}</b><small>${esc(a.activity())}</small></span><span class="chip ${c}">${l}</span></button>`;}).join('')+'</div>').join(''):'<p class="none">Belum ada sesi yang jalan.</p>';
+  if(html!==lastPanelHtml){$('#sessions').innerHTML=html;lastPanelHtml=html;}
+  renderEditor();
   $('#clock').textContent=new Date().toLocaleDateString('id-ID',{weekday:'long'})+', '+hhmm();
+}
+
+/* ---------- picking a worker: from the list or the room ---------- */
+let selectedKey=null;
+function select(key){
+  selectedKey=key;lastPanelHtml='';
+  const ag=key&&agents.get(key);
+  $('#editor').hidden=!ag;
+  if(ag){$('#edInput').value=meta.names[key]||'';$('#edInput').placeholder=ag.autoName||ag.name;}
+  for(const a of agents.values())a.tagEl.classList.toggle('sel',a.key===key);
+  renderEditor();
+}
+function renderEditor(){
+  const ag=selectedKey&&agents.get(selectedKey);
+  if(!ag||ag.gone||ag.leaving){if(!$('#editor').hidden){$('#editor').hidden=true;selectedKey=null;}return;}
+  $('#edSw').style.setProperty('--c',ag.hex);
+  $('#edName').textContent=ag.name;
+  $('#edFrom').textContent=(ag.session||'')+' · '+ag.activity();
+  $('#edReset').disabled=!meta.names[ag.key];
+}
+$('#sessions').addEventListener('click',e=>{const b=e.target.closest('button.row');if(b)select(b.dataset.key);});
+$('#edSave').addEventListener('click',()=>{const ag=agents.get(selectedKey);if(!ag)return;const v=$('#edInput').value.trim().slice(0,24);setMeta(ag.key,{name:v});log(v?`${ag.autoName||'Karyawan'} sekarang bernama ${v}`:`${ag.name} pakai nama asli`);lastPanelHtml='';});
+$('#edInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('#edSave').click();if(e.key==='Escape')select(null);});
+$('#edReset').addEventListener('click',()=>{const ag=agents.get(selectedKey);if(!ag)return;$('#edInput').value='';setMeta(ag.key,{name:''});lastPanelHtml='';});
+$('#edHome').addEventListener('click',()=>{const ag=agents.get(selectedKey);if(!ag)return;const key=ag.key;select(null);setMeta(key,{hidden:true});});
+$('#edClose').addEventListener('click',()=>select(null));
+const ray=new THREE.Raycaster(),ndc=new THREE.Vector2();
+function pickAt(cx,cy){
+  const r=canvas.getBoundingClientRect();
+  ndc.set(((cx-r.left)/r.width)*2-1,-((cy-r.top)/r.height)*2+1);
+  ray.setFromCamera(ndc,camera);
+  const live=[...agents.values()].filter(a=>!a.gone&&!a.leaving);
+  const hits=ray.intersectObjects(live.map(a=>a.m.root),true);
+  if(!hits.length){select(null);return;}
+  let o=hits[0].object;while(o&&!live.some(a=>a.m.root===o))o=o.parent;
+  const ag=live.find(a=>a.m.root===o);select(ag?ag.key:null);
 }
 
 /* ---------- camera & input ---------- */
@@ -687,7 +776,9 @@ $('#rotR').addEventListener('click',()=>{camTarget+=PI/2;});
 $('#zoomIn').addEventListener('click',()=>{zoomTarget=Math.max(0.5,zoomTarget*0.85);});
 $('#zoomOut').addEventListener('click',()=>{zoomTarget=Math.min(1.5,zoomTarget/0.85);});
 let drag=null;
-canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX};canvas.setPointerCapture(e.pointerId);});
+let downAt=null;
+canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX};downAt={x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId);});
+canvas.addEventListener('pointerup',e=>{if(downAt&&Math.hypot(e.clientX-downAt.x,e.clientY-downAt.y)<5)pickAt(e.clientX,e.clientY);downAt=null;});
 canvas.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x;drag.x=e.clientX;camTarget-=dx*0.008;camAngle=camTarget;});
 const endDrag=()=>{drag=null;};
 canvas.addEventListener('pointerup',endDrag);canvas.addEventListener('pointercancel',endDrag);

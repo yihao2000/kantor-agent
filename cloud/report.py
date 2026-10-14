@@ -89,7 +89,7 @@ def main():
     now = time.time()
 
     def agent(aid, name):
-        a = agents.setdefault(aid, {"id": aid, "name": name, "status": "idle", "task": "", "tool": "", "t": now})
+        a = agents.setdefault(aid, {"id": aid, "name": name, "status": "idle", "task": "", "tool": "", "since": 0, "t": now})
         a["t"] = now
         return a
 
@@ -114,6 +114,11 @@ def main():
     elif ev == "SessionEnd":
         gone = True
 
+    for a in agents.values():
+        if a["status"] == "working" and not a.get("since"):
+            a["since"] = int(now * 1000)
+        if a["status"] != "working":
+            a["since"] = 0
     for k in list(agents):
         a = agents[k]
         if k != "main" and a["status"] == "idle" and now - a["t"] > IDLE_FORGET_S:
@@ -125,7 +130,7 @@ def main():
         pass
 
     body = {"sid": sid, "label": st["label"], "from": "cloud", "gone": gone,
-            "agents": [{k: a[k] for k in ("id", "name", "status", "task", "tool")} for a in agents.values()]}
+            "agents": [{k: a.get(k, 0 if k == "since" else "") for k in ("id", "name", "status", "task", "tool", "since")} for a in agents.values()]}
     # Post from a detached child so Claude never waits on the network.
     if os.fork() != 0:
         return
