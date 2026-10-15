@@ -98,10 +98,11 @@ def main():
     aid = e.get("agent_id")
     gone = False
     if ev == "UserPromptSubmit":
-        main_a.update(status="working", task=clean(e.get("prompt", "")) or "Kerja", tool="")
+        main_a.update(status="working", task=clean(e.get("prompt", "")) or "Kerja", tool="", used="")
     elif ev == "PreToolUse":
         a = agent(aid, nice_type(e.get("agent_type"))) if aid else main_a
         a.update(status="working", tool=tool_label(e.get("tool_name"), e.get("tool_input")))
+        a["used"] = a["tool"]
         if not a["task"]:
             a["task"] = a["name"]
     elif ev == "SubagentStart" and aid:
@@ -130,7 +131,7 @@ def main():
         pass
 
     body = {"sid": sid, "label": st["label"], "from": "cloud", "gone": gone,
-            "agents": [{k: a.get(k, 0 if k == "since" else "") for k in ("id", "name", "status", "task", "tool", "since")} for a in agents.values()]}
+            "agents": [{k: a.get(k, 0 if k == "since" else "") for k in ("id", "name", "status", "task", "tool", "used", "since")} for a in agents.values()]}
     # Post from a detached child so Claude never waits on the network.
     if os.fork() != 0:
         return

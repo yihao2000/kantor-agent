@@ -93,7 +93,7 @@ async function loadRelay($: EngineInterface) {
 /** Tells the relay who works here: at once when something changed, else every 15 seconds. */
 async function postRelay($: EngineInterface, agents: KantorAgent[], gone = false) {
   if (!relayUrl || !sid) return
-  const slim = agents.map(a => ({ id: a.id, name: a.name, status: a.status, task: a.task, tool: a.tool, since: a.status === 'working' ? a.startedAt : 0 }))
+  const slim = agents.map(a => ({ id: a.id, name: a.name, status: a.status, task: a.task, tool: a.tool, used: a.used ?? '', since: a.status === 'working' ? a.startedAt : 0 }))
   const sig = JSON.stringify([label, slim, gone])
   const now = await $.clock.now()
   if (!gone && sig === relaySig && now - relayAt < 15000) return

@@ -58,6 +58,7 @@ export default async function (req: Request): Promise<Response> {
       status: a.status === "working" ? "working" : "idle",
       task: clip(a.task, 80),
       tool: clip(a.tool, 60),
+      used: clip(a.used, 60),
       since: typeof a.since === "number" ? a.since : 0,
     }));
     await blob.setJSON(PREFIX + sid, { sid, label: clip(body.label, 40), from: clip(body.from, 10), agents, at: now });

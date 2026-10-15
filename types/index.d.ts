@@ -8,6 +8,8 @@ export type KantorAgent = {
   /** The tool it is using now, as a short label; '' when none. */
   tool: string
   tools: number
+  /** The last tool used in the current or latest turn, kept after the turn ends. */
+  used?: string
   /** Index into the look palette (shirt, hair, skin). */
   look: number
   /** Desk index 0-5, or -1 when every desk is taken. */

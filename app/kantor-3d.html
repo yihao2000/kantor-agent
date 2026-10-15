@@ -85,6 +85,7 @@ button.row{width:100%;background:transparent;border:0;border-radius:4px;padding:
 button.row:hover{background:var(--raise)}
 button.row.sel{background:var(--raise);outline:2px solid var(--accent)}
 .editor{display:flex;flex-direction:column;gap:10px;border-color:var(--accent)}
+.editor[hidden]{display:none}
 .editor h2{margin:0}
 .ed-who{display:grid;grid-template-columns:14px minmax(0,1fr);gap:10px;align-items:center}
 .ed-who b{display:block;font-size:15px}
@@ -136,7 +137,7 @@ button.row.sel{background:var(--raise);outline:2px solid var(--accent)}
     </div>
     <div class="card"><h2>Sesi</h2><div id="sessions"><p class="none">Belum ada sesi yang jalan.</p></div></div>
     <div class="card"><h2>Aktivitas</h2><ul class="log" id="log"></ul></div>
-    <p class="note">Baju merah: lagi kerjain hal kreatif. Cuma pakai kolor: lagi kerjain hal teknis. Klik karyawan di ruangan atau di daftar untuk ganti nama atau memulangkannya. Data diambil dari sesi Claude Code di komputer ini, plus sesi cloud lewat relay kalau sudah disambungkan. Buka lagi kapan aja lewat /kantor-3d.</p>
+    <p class="note">Baju merah: lagi kerjain hal kreatif. Cuma pakai kolor: lagi pakai tools atau kerjain hal teknis. Klik karyawan di ruangan atau di daftar untuk ganti nama atau memulangkannya. Data diambil dari sesi Claude Code di komputer ini, plus sesi cloud lewat relay kalau sudah disambungkan. Buka lagi kapan aja lewat /kantor-3d.</p>
   </aside>
 </div>
 
@@ -392,7 +393,7 @@ const POIS=[
 ];
 
 /* ---------- characters ---------- */
-const PANTS=0x3b3f5c, SHOE=0x2a2633, EYE=0x1b1a24, BOXERS=0x3f7fd8;
+const PANTS=0x3b3f5c, SHOE=0x2a2633, EYE=0x1b1a24, BOXERS=0x19b4ff;
 const LOOKS=[
   {color:0xe07a4f,skin:0xf1c9a5,hair:0x3a2a22,headset:true},
   {color:0x4f8fd9,skin:0xd9a77e,hair:0x1f1b18,glasses:true},
@@ -440,7 +441,7 @@ function dress(m,kind){
   for(const x of c.boxers)x.visible=naked;
 }
 const CREATIVE_WORDS=['desain','design','konten','content','caption','copywriting','copy','skrip','naskah','video','reels','reel','tiktok','instagram','feed','poster','flyer','banner','logo','branding','brand','canva','ilustrasi','illustration','gambar','foto','photo','artikel','article','blog','tulis','nulis','menulis','write','story','cerita','hook','iklan','ads','kreatif','creative','mockup','slide','presentasi','deck','puisi','lagu','ide konten','storyboard','thumbnail','tagline','headline','kampanye','campaign','packaging','kemasan','souvenir','warna','font','visual'];
-const TECH_WORDS=['code','coding','kode','bug','fix','error','deploy','server','api','database','sql','plugin','hooks','git','github','commit','push','npm','node','python','javascript','typescript','html','css','react','terminal','bash','install','setup','config','relay','val town','test','build','debug','refactor','function','fungsi','script','endpoint','json','csv','spreadsheet','sheet','rumus','formula','automasi','automation','cron','scheduled','dev','localhost','3d','three.js','webhook','pixel','gtm','tracking','dashboard','integrasi','integration','mcp','sdk','claude code'];
+const TECH_WORDS=['code','coding','kode','bug','fix','error','deploy','server','api','database','sql','plugin','hooks','git','github','commit','push','npm','node','python','javascript','typescript','html','css','react','terminal','bash','install','setup','config','relay','val town','test','build','debug','refactor','function','fungsi','script','endpoint','json','csv','spreadsheet','sheet','rumus','formula','automasi','automation','cron','scheduled','dev','localhost','3d','three.js','webhook','pixel','gtm','tracking','dashboard','integrasi','integration','mcp','sdk','claude code','tool','tools','folder','file','komputer','laptop','download','upload','instal','server','cek isi'];
 const TECH_TOOLS=/^(bash|edit|write|multiedit|notebookedit|read|grep|glob)\b/i, CREATIVE_TOOLS=/canva|image|figma/i;
 // A word counts when it starts a word in the task ("tulis" matches "tuliskan", "ads" does not match "uploads").
 const wordRe=w=>new RegExp('(^|[^a-z0-9])'+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));
@@ -452,7 +453,9 @@ function kindOf(task,tool){
   for(const r of TECH_RE)if(r.test(t))k+=2;
   if(tool&&TECH_TOOLS.test(tool))k+=1;
   if(tool&&CREATIVE_TOOLS.test(tool))c+=2;
-  return c>k?'creative':k>c?'tech':'';
+  if(c>k)return'creative';
+  // Anything else that touches a tool, or sounds technical, strips down to boxers.
+  return k>0||tool?'tech':'';
 }
 
 /* ---------- log ---------- */
@@ -702,8 +705,10 @@ function sync(){
         log(`${name} masuk kantor`);
       }
       ag.autoName=auto;ag.setName(name);ag.session=s.label||'Claude';ag.from=s.from||'';
-      if(a.status==='working'){ag.work(a.task,a.tool);const k=kindOf(a.task,a.tool);if(k||ag.kind===undefined)ag.setKind(k||ag.kind||'');}
-      else{ag.rest();if(ag.kind===undefined)ag.setKind('');}
+      if(a.status==='working')ag.work(a.task,a.tool);else ag.rest();
+      // Dress by the latest task, even one that finished before this page saw it working.
+      const k=a.task||a.tool||a.used?kindOf(a.task,a.tool||a.used):'';
+      if(k||ag.kind===undefined)ag.setKind(k||ag.kind||'');
     }
   }
   for(const[key,ag]of agents)if(!seen.has(key)&&!ag.leaving){log(meta.hidden[key]?`${ag.name} dipulangkan`:`${ag.name} pulang`);ag.leave();if(selectedKey===key)select(null);}

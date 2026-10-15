@@ -231,7 +231,7 @@ export function startWork(o: KantorOffice, id: string, task: string, now: number
   if (task) a.task = task
   if (a.status === 'working') return n
   const p = from ?? posOf(a, now)
-  a.status = 'working'; a.tool = ''; a.startedAt = now
+  a.status = 'working'; a.tool = ''; a.used = ''; a.startedAt = now
   a.fromX = p[0]; a.fromZ = p[1]; a.moveAt = now
   a.arriveAt = a.desk < 0 ? now : now + walkMs(arrivePath(a))
   return n
@@ -253,7 +253,7 @@ export function noteTool(o: KantorOffice, id: string, label: string, now: number
   let n = a0.status === 'working' ? copy(o) : startWork(o, id, '', now)
   n = n === o ? copy(o) : n
   const a = n.agents.find(x => x.id === id)!
-  a.tool = label; a.tools += 1
+  a.tool = label; a.used = label; a.tools += 1
   return n
 }
 export function addSubagent(o: KantorOffice, id: string, type: string, task: string, now: number): KantorOffice {
