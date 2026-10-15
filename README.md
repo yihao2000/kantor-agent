@@ -20,6 +20,8 @@ Klik karyawan di ruangan atau di daftar Sesi untuk membuka kartu Karyawan:
 
 Kalau relay dipakai, nama dan daftar yang dipulangkan disimpan di relay, jadi sama di semua perangkat. Tanpa relay, disimpan di browser itu saja.
 
+Baju karyawan ikut jenis kerjaannya. Tugas kreatif (desain, konten, caption, skrip, video, Canva, artikel) bikin bajunya merah. Tugas teknis (kode, bug, plugin, server, Bash, Edit) bikin dia tinggal pakai kolor. Jenisnya ditebak dari teks tugas dan tool yang dipakai. Tugas lain tetap pakai baju biasa.
+
 ### Jadi wallpaper live di Mac
 
 Ketik `/kantor-wallpaper` di Claude Code. Plugin menyiapkan folder `~/.claude/kantor-agent/wallpaper/`: kantornya saja, layar penuh, kamera berputar pelan, dan digambar 30 fps supaya hemat baterai. Pasang [Plash](https://sindresorhus.com/plash) (gratis), tambahkan website lokal, lalu pilih folder itu (di jendela pilih folder, tekan Cmd+Shift+G dan tempel alamatnya, karena `.claude` folder tersembunyi). Di halaman biasa, tombol ⛶ atau tombol W juga mengganti ke mode wallpaper.
