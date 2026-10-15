@@ -20,6 +20,10 @@ Klik karyawan di ruangan atau di daftar Sesi untuk membuka kartu Karyawan:
 
 Kalau relay dipakai, nama dan daftar yang dipulangkan disimpan di relay, jadi sama di semua perangkat. Tanpa relay, disimpan di browser itu saja.
 
+### Jadi wallpaper live di Mac
+
+Ketik `/kantor-wallpaper` di Claude Code. Plugin menyiapkan folder `~/.claude/kantor-agent/wallpaper/`: kantornya saja, layar penuh, kamera berputar pelan, dan digambar 30 fps supaya hemat baterai. Pasang [Plash](https://sindresorhus.com/plash) (gratis), tambahkan website lokal, lalu pilih folder itu (di jendela pilih folder, tekan Cmd+Shift+G dan tempel alamatnya, karena `.claude` folder tersembunyi). Di halaman biasa, tombol ⛶ atau tombol W juga mengganti ke mode wallpaper.
+
 Halaman dan datanya ada di `~/.claude/kantor-agent/`. Setiap sesi Claude Code menulis `roster.js` di sana, dan halamannya membaca ulang file itu tiap 1,5 detik. Butuh internet untuk memuat library 3D-nya.
 
 ## Install

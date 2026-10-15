@@ -85,6 +85,9 @@ test('sessions on the same computer share one office', async ($, on) => {
   const roster = files.get('/Users/kamu/.claude/kantor-agent/roster.js') ?? ''
   expect(roster.startsWith('window.__kantor(')).toBe(true)
   expect(roster.includes('blog-saya') && roster.includes('"label":"kantor"')).toBe(true)
+  // and a wallpaper copy, locked in wallpaper mode, with its own roster
+  expect(files.get('/Users/kamu/.claude/kantor-agent/wallpaper/index.html')?.includes('data-wall="force"')).toBe(true)
+  expect(files.get('/Users/kamu/.claude/kantor-agent/wallpaper/roster.js')).toBe(roster)
 
   const desk = await $.ui.mount({ ...PANE, surface: 'desktop' })
   expect(await desk.find({ text: /2 sesi/ })).toBeDefined()

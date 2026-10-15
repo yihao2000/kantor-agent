@@ -113,8 +113,14 @@ async function writeRoster($: EngineInterface) {
   const own = await read($, office)
   const others = await read($, remote)
   const sessions = [{ sid, label, at: now, agents: own.agents }, ...others]
-  await $.fs.write(`${outDir}/roster.js`, `window.__kantor(${JSON.stringify({ at: now, relay: relayUrl, sessions })})\n`)
+  const text = `window.__kantor(${JSON.stringify({ at: now, relay: relayUrl, sessions })})\n`
+  await $.fs.write(`${outDir}/roster.js`, text)
+  // The wallpaper folder is opened on its own by Plash, so it gets its own copy.
+  await $.fs.write(`${outDir}/wallpaper/roster.js`, text).catch(() => undefined)
 }
+
+/** The same page, locked in wallpaper mode: only the room, full screen. */
+const WALL_PAGE = PAGE.replace('<body>', '<body class="wall" data-wall="force">')
 
 /** Writes the 3D page when it is missing or older than this version of the mod. */
 async function ensurePage($: EngineInterface) {
@@ -122,6 +128,9 @@ async function ensurePage($: EngineInterface) {
   const path = `${outDir}/index.html`
   const current = (await $.fs.exists(path)) ? await $.fs.read(path) : ''
   if (current !== PAGE) await $.fs.write(path, PAGE)
+  const wall = `${outDir}/wallpaper/index.html`
+  const wallNow = (await $.fs.exists(wall)) ? await $.fs.read(wall) : ''
+  if (wallNow !== WALL_PAGE) await $.fs.write(wall, WALL_PAGE)
   return path
 }
 
@@ -173,6 +182,7 @@ export const register: Register = on => {
       await $.command.register({ name: 'kantor', description: 'Buka panel Kantor Agent: semua sesi dan sub agent, kerja atau santai' })
       await $.command.register({ name: 'kantor-relay', description: 'Sambungkan kantor ke server relay: /kantor-relay <alamat lengkap dengan ?key=...>', argumentHint: '<alamat relay>' })
       await $.command.register({ name: 'kantor-3d', description: 'Buka kantor 3D live di browser: semua sesi dan sub agent di komputer ini' })
+      await $.command.register({ name: 'kantor-wallpaper', description: 'Cara pasang kantor 3D sebagai wallpaper live di Mac' })
       void $.ui.open({ id: PANE, title: TITLE }).catch(() => undefined)
     } catch {
       // a surface without panes still reports this session to the others
@@ -228,6 +238,23 @@ export const register: Register = on => {
       }
     }
     return { text: `Buka file ini di browser: ${path}` }
+  })
+
+  on('command.run', { command: 'kantor-wallpaper' }, async $ => {
+    const path = await ensurePage($)
+    if (!path) return { text: 'Folder rumah (HOME) nggak ketemu, wallpaper belum bisa disiapkan.' }
+    await writeRoster($)
+    const dir = `${outDir}/wallpaper`
+    await $.process.run(['open', '-R', `${dir}/index.html`]).catch(() => undefined)
+    return {
+      text: [
+        `Wallpaper siap di folder: ${dir}`,
+        '1. Pasang Plash dari Mac App Store (gratis).',
+        '2. Klik ikon Plash di menu bar, Add Website, lalu pilih Local Website / Choose Folder.',
+        '3. Tekan Cmd+Shift+G, tempel alamat folder di atas, lalu Open.',
+        'Kantornya jadi wallpaper dan ikut live selama Claude jalan.',
+      ].join('\n'),
+    }
   })
 
   // The main loop: Claude sits down when a turn starts and stands up when it ends.
