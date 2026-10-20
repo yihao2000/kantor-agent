@@ -165,5 +165,29 @@ test('a conversation in the Claude app is named after its first request', async 
   // the roster names the session after the request, not after /home/claude
   await $.session.start({ cwd: '/home/claude', surface: 'desktop', isInteractive: true, startedAt: now } as never).catch(() => undefined)
   const roster = files.get('/root/.claude/kantor-agent/roster.js') ?? ''
-  expect(roster.includes('"label":"Chat · ') || roster === '').toBe(true)
+  expect(roster.includes('"label":"/home/claude"')).toBe(false)
+  expect(roster.includes('"label":"claude"')).toBe(false)
+})
+
+test('a conversation takes the title the Claude app gave it', async ($, on) => {
+  const now = 1_800_000_000_000
+  mock.clock(on, { now })
+  mock.store(on)
+  mock.env(on, { HOME: '/root' })
+  const files = new Map<string, string>([['/root/.claude/kantor-agent/titles/chat-7.txt', '3D Office Worker Simulation\n']])
+  on('session.id', () => ({ value: 'chat-7' }) as never)
+  on('session.cwd', () => ({ value: '/home/claude' }) as never)
+  on('command.register', () => ({ value: {} }) as never)
+  on('ui.open', () => ({ value: { isPlaced: true } }) as never)
+  on('session.start', (_$, e) => ({ cwd: e.cwd }) as never)
+  on('fs.exists', (_$, e) => ({ value: files.has((e as { path: string }).path) }) as never)
+  on('fs.read', (_$, e) => ({ value: files.get((e as { path: string }).path) ?? '' }) as never)
+  on('fs.write', (_$, e) => {
+    const w = e as { path: string; text: string }
+    files.set(w.path, w.text)
+    return { value: undefined } as never
+  })
+  await $.session.start({ cwd: '/home/claude', surface: 'desktop', isInteractive: true, startedAt: now } as never)
+  const roster = files.get('/root/.claude/kantor-agent/roster.js') ?? ''
+  expect(roster.includes('"label":"3D Office Worker Simulation"')).toBe(true)
 })

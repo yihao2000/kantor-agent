@@ -60,6 +60,7 @@ export default async function (req: Request): Promise<Response> {
       tool: clip(a.tool, 60),
       used: clip(a.used, 60),
       since: typeof a.since === "number" ? a.since : 0,
+      ended: typeof a.ended === "number" ? a.ended : 0,
     }));
     await blob.setJSON(PREFIX + sid, { sid, label: clip(body.label, 40), from: clip(body.from, 10), agents, at: now });
     return json({ ok: true, at: now });

@@ -63,9 +63,29 @@ def tool_label(name, inp):
     return s if len(s) <= 40 else s[:39] + "…"
 
 
+def save_title(e):
+    """Hands the conversation's title (the one the Claude app shows) to the mod, which can't read it itself."""
+    sid = re.sub(r"[^\w-]", "", str(e.get("session_id", "")))[:80]
+    title = re.sub(r"\s+", " ", str(e.get("session_title") or "")).strip()[:80]
+    if not sid or not title:
+        return
+    folder = os.path.join(HOME, ".claude", "kantor-agent", "titles")
+    path = os.path.join(folder, sid + ".txt")
+    try:
+        os.makedirs(folder, exist_ok=True)
+        with open(path, "w") as f:
+            f.write(title)
+    except Exception:
+        pass
+
+
 def main():
-    # Where the Kantor Agent mod runs (Claude Code), it reports by itself.
+    # Where the Kantor Agent mod runs (Claude Code), it reports by itself; this hook only passes it the title.
     if os.environ.get("KANTOR_MOD") == "1":
+        try:
+            save_title(json.load(sys.stdin))
+        except Exception:
+            pass
         return
     url = relay_url()
     if not url:
@@ -85,6 +105,9 @@ def main():
         cwd = (e.get("cwd") or "").rstrip("/")
         base = cwd.rsplit("/", 1)[-1] if cwd else ""
         st = {"label": ("Cloud · " + base) if base else "Cloud", "agents": {}}
+    title = re.sub(r"\s+", " ", str(e.get("session_title") or "")).strip()
+    if title:
+        st["label"] = title[:40]
     agents = st["agents"]
     now = time.time()
 
@@ -118,7 +141,10 @@ def main():
     for a in agents.values():
         if a["status"] == "working" and not a.get("since"):
             a["since"] = int(now * 1000)
+            a["ended"] = 0
         if a["status"] != "working":
+            if a.get("since"):
+                a["ended"] = int(now * 1000)
             a["since"] = 0
     for k in list(agents):
         a = agents[k]
@@ -131,7 +157,7 @@ def main():
         pass
 
     body = {"sid": sid, "label": st["label"], "from": "cloud", "gone": gone,
-            "agents": [{k: a.get(k, 0 if k == "since" else "") for k in ("id", "name", "status", "task", "tool", "used", "since")} for a in agents.values()]}
+            "agents": [{k: a.get(k, 0 if k in ("since", "ended") else "") for k in ("id", "name", "status", "task", "tool", "used", "since", "ended")} for a in agents.values()]}
     # Post from a detached child so Claude never waits on the network.
     if os.fork() != 0:
         return

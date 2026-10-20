@@ -37,6 +37,14 @@ Ketik `/kantor-wallpaper` di Claude Code. Plugin menyiapkan folder `~/.claude/ka
 
 Halaman dan datanya ada di `~/.claude/kantor-agent/`. Setiap sesi Claude Code menulis `roster.js` di sana, dan halamannya membaca ulang file itu tiap 1,5 detik. Butuh internet untuk memuat library 3D-nya.
 
+## Kantor 0.9
+
+- **Nama karyawan = judul chat.** Hook plugin menerima judul percakapan dari Claude (`session_title`) dan menyimpannya di `~/.claude/kantor-agent/titles/`. Kalau judulnya belum ada, plugin bikin judul pendek sendiri dari permintaan pertama.
+- **Open office:** dua cluster bench desk dengan Mac, plang besar DAPU GIFT STUDIO, café, lounge, pojok pingpong dan arcade, meja diskusi, jendela kota.
+- **Baju santai:** hoodie, tee, jaket, topi, beanie, headphone, sneakers. Merah tetap untuk kerjaan kreatif, kolor untuk yang pakai tools.
+- **Klik orangnya:** dia jawab lewat balon omongan sesuai yang lagi dia kerjain.
+- **Panel ringkas:** Kerja, Santai, Beres, lalu satu baris per karyawan: lagi ngerjain apa, mulai jam berapa dan sudah berapa lama, atau selesai jam berapa.
+
 ## Install
 
 Di prompt sesi terminal:

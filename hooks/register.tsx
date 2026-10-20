@@ -35,6 +35,21 @@ const GENERIC_DIRS = new Set(['claude', 'root', 'home', 'workspace', 'tmp', 'use
 const isFiller = (t: string) => !t || /^continue with the task/i.test(t) || /^lanjut kerja$/i.test(t)
 let titledAt = 0
 let titling = false
+/** The conversation's own title (what the Claude app shows in its sidebar), passed in by the classic hook in titles/<sid>.txt. */
+let appTitle = ''
+const clipTitle = (t: string) => (t.length > 40 ? t.slice(0, 39).trimEnd() + '…' : t)
+
+/** Picks up the title the app gave this conversation, once the classic hook has written it. */
+async function readAppTitle($: EngineInterface) {
+  if (!outDir || !sid) return
+  const path = `${outDir}/titles/${sid}.txt`
+  if (!(await $.fs.exists(path).catch(() => false))) return
+  const t = (await $.fs.read(path).catch(() => '')).replace(/\s+/g, ' ').trim()
+  if (!t || t === appTitle) return
+  appTitle = t
+  label = clipTitle(t)
+  relaySig = ''
+}
 
 /** The person's own requests in this conversation, oldest first. */
 async function userTexts($: EngineInterface): Promise<string[]> {
@@ -44,7 +59,7 @@ async function userTexts($: EngineInterface): Promise<string[]> {
 
 /** Names a conversation like the app's own sidebar title: a few words from a quick model call, else its first request. */
 async function nameSession($: EngineInterface) {
-  if (!namedByTask || titling) return
+  if (!namedByTask || titling || appTitle) return
   const texts = await userTexts($)
   if (!texts.length || (titledAt && (texts.length < 3 || titledAt >= 3))) return
   titling = true
@@ -56,12 +71,13 @@ async function nameSession($: EngineInterface) {
       prompt: 'Tulis judul 2 sampai 4 kata untuk percakapan ini, dalam bahasa yang sama dengan pesannya. Hanya judulnya, tanpa tanda kutip dan tanpa titik.\n\nPesan pengguna:\n' + texts.slice(0, 3).map(t => '- ' + t).join('\n'),
     })
     const title = r.isAnswered ? r.text.replace(/["'`*.]/g, '').replace(/\s+/g, ' ').trim() : ''
-    label = title ? 'Chat · ' + (title.length > 22 ? title.slice(0, 21).trimEnd() + '…' : title) : nameFromTask(texts[0] ?? '')
+    if (appTitle) return
+    label = title ? clipTitle(title) : nameFromTask(texts[0] ?? '')
     titledAt = texts.length
     relaySig = ''
     await publish($)
   } catch {
-    label = nameFromTask(texts[0] ?? '')
+    if (!appTitle) label = nameFromTask(texts[0] ?? '')
   } finally {
     titling = false
   }
@@ -69,7 +85,7 @@ async function nameSession($: EngineInterface) {
 
 const nameFromTask = (task: string) => {
   const t = task.replace(/[^\p{L}\p{N} ]+/gu, ' ').replace(/\s+/g, ' ').trim()
-  return 'Chat · ' + (t.length > 18 ? t.slice(0, 17).trimEnd() + '…' : t || 'baru')
+  return t ? clipTitle(t) : 'Chat baru'
 }
 let lastSeen = ''
 /** Where the 3D page and its roster live: ~/.claude/kantor-agent */
@@ -93,14 +109,14 @@ async function loadRelay($: EngineInterface) {
 /** Tells the relay who works here: at once when something changed, else every 15 seconds. */
 async function postRelay($: EngineInterface, agents: KantorAgent[], gone = false) {
   if (!relayUrl || !sid) return
-  const slim = agents.map(a => ({ id: a.id, name: a.name, status: a.status, task: a.task, tool: a.tool, used: a.used ?? '', since: a.status === 'working' ? a.startedAt : 0 }))
+  const slim = agents.map(a => ({ id: a.id, name: a.name, status: a.status, task: a.task, tool: a.tool, used: a.used ?? '', since: a.status === 'working' ? a.startedAt : 0, ended: a.status === 'working' ? 0 : a.endedAt }))
   const sig = JSON.stringify([label, slim, gone])
   const now = await $.clock.now()
   if (!gone && sig === relaySig && now - relayAt < 15000) return
   relaySig = sig
   relayAt = now
   try {
-    await $.http.fetch(relayUrl, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sid, label, from: label.startsWith('Chat · ') ? 'chat' : 'mac', gone, agents: slim }) })
+    await $.http.fetch(relayUrl, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sid, label, from: namedByTask ? 'chat' : 'mac', gone, agents: slim }) })
   } catch {
     // the office still works locally when the relay is unreachable
   }
@@ -169,10 +185,11 @@ export const register: Register = on => {
     const home = ((await $.env.get('HOME').catch(() => undefined)) ?? '').replace(/\/+$/, '')
     const base = cwd.split('/').pop() || ''
     namedByTask = GENERIC_DIRS.has(base.toLowerCase()) && cwd !== home
-    label = !cwd || cwd === home ? 'Claude' : namedByTask ? 'Chat · baru' : base
+    label = !cwd || cwd === home ? 'Claude' : namedByTask ? 'Chat baru' : base
     if (home) outDir = `${home}/.claude/kantor-agent`
     try {
       await loadRelay($)
+      await readAppTitle($)
       await ensurePage($)
     } catch {
       // the panel still works without the 3D page
@@ -191,6 +208,7 @@ export const register: Register = on => {
     await publish($)
     $.clock.every(4000, async () => {
       await loadRelay($).catch(() => undefined)
+      await readAppTitle($).catch(() => undefined)
       await poll($)
       await publish($)
     })
@@ -264,7 +282,7 @@ export const register: Register = on => {
     let task = e.agentId ? '' : taskFrom(e.text)
     if (!e.agentId && isFiller(task)) task = (await userTexts($)).at(-1) ?? ''
     // titling runs on a timer, outside this turn, so the turn never waits for it
-    if (!e.agentId && namedByTask) $.clock.after(50, () => nameSession($))
+    if (!e.agentId) $.clock.after(400, () => readAppTitle($).then(() => (appTitle ? publish($) : namedByTask ? nameSession($) : undefined)))
     await update($, office, o => startWork(ensure(o, now), id, task || 'Lanjut kerja', now))
     await publish($)
     return next(e)
