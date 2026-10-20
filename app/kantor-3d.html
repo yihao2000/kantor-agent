@@ -50,6 +50,7 @@ button{font:inherit;color:inherit}
 .ctrl{position:absolute;right:12px;bottom:12px;display:flex;gap:6px}
 .ctrl button{width:36px;height:36px;border:2px solid var(--ink);background:var(--paper);color:var(--ink);font-family:var(--f-pixel);font-size:18px;line-height:1;cursor:pointer;box-shadow:2px 2px 0 var(--ink)}
 .ctrl button:active{transform:translate(2px,2px);box-shadow:none}
+.ctrl button[aria-pressed="true"]{background:var(--accent)}
 .hint{position:absolute;left:12px;bottom:14px;font-size:12px;color:var(--muted);pointer-events:none}
 .panel{display:flex;flex-direction:column;gap:14px;min-width:0}
 /* Wallpaper mode: just the room, full screen. The status sits above the Dock, clear of the menu bar. */
@@ -138,6 +139,7 @@ button.row.sel{background:var(--raise);outline:2px solid var(--accent)}
       <button type="button" id="rotR" aria-label="Putar kamera ke kanan">&#x21BB;</button>
       <button type="button" id="zoomIn" aria-label="Perbesar">+</button>
       <button type="button" id="zoomOut" aria-label="Perkecil">&minus;</button>
+      <button type="button" id="spinBtn" aria-label="Putar otomatis" aria-pressed="true" title="Putar otomatis (R)">&#x27F3;</button>
       <button type="button" id="wallBtn" aria-label="Mode wallpaper" title="Mode wallpaper (W)">&#x26F6;</button>
     </div>
   </section>
@@ -385,17 +387,17 @@ function buildDesk(d,i){
   // 'n': the worker sits at the front (z+1.35) facing the back wall; 's': at the back (z+0.65) facing the room
   const n=d.face!=='s',top=n?z+0.5:z+1.5,mon=n?z+0.3:z+1.7,dir=n?1:-1,seatZ=n?z+1.35:z+0.65;
   box(g,2,0.06,0.95,PLY,x+1,0.57,top);
-  box(g,2,0.03,0.04,0xc9a27a,x+1,0.56,top+0.47*dir);
+  box(g,1.96,0.03,0.04,0xc9a27a,x+1,0.555,top+0.47*dir);
   for(const ax of[0.08,1.92])for(const az of[-0.38,0.38])box(g,0.06,0.57,0.06,WOOD,x+ax,0,top+az);
   // a desktop Mac: colored back, white bezel, aluminium stand
   const backMat=new THREE.MeshLambertMaterial({color:ALU});
   box(g,0.12,0.02,0.16,ALU,x+1,0.63,mon);
   box(g,0.1,0.26,0.03,ALU,x+1,0.63,mon-0.04*dir);
-  box(g,0.98,0.62,0.035,backMat,x+1,0.79,mon-0.02*dir);
-  box(g,0.98,0.1,0.045,0xeeeeea,x+1,0.79,mon+0.01*dir);
-  box(g,0.92,0.48,0.012,0xf7f7f4,x+1,0.9,mon+0.004*dir);
+  box(g,0.97,0.62,0.035,backMat,x+1,0.79,mon-0.022*dir);
+  box(g,0.99,0.1,0.045,0xeeeeea,x+1,0.785,mon+0.012*dir);
+  box(g,0.92,0.48,0.012,0xf7f7f4,x+1,0.9,mon+0.006*dir);
   const s=pixTex(48,28);
-  screenPlane(g,0.86,0.46,s.t,x+1,1.14,mon+0.012*dir,n?0:PI);
+  screenPlane(g,0.86,0.46,s.t,x+1,1.14,mon+0.016*dir,n?0:PI);
   box(g,0.5,0.015,0.15,0xf4f4f1,x+1,0.63,top+0.22*dir);
   box(g,0.07,0.015,0.11,0xf4f4f1,x+1.42,0.63,top+0.22*dir);
   const mug=box(g,0.09,0.11,0.09,0xe8e3d6,x+1.72,0.63,top+0.1*dir);
@@ -404,8 +406,8 @@ function buildDesk(d,i){
   else box(g,0.18,0.2,0.18,SKY,x+0.3,0.63,top-0.15*dir);
   // a colorful chair
   const chairMat=new THREE.MeshLambertMaterial({color:CHAIR_COLS[i%CHAIR_COLS.length]});
-  box(g,0.46,0.03,0.05,DARK,x+1,0,seatZ+0.03*dir);box(g,0.05,0.03,0.46,DARK,x+1,0,seatZ+0.03*dir);
-  box(g,0.06,0.3,0.06,DARK,x+1,0.02,seatZ+0.03*dir);
+  box(g,0.46,0.03,0.05,DARK,x+1,0,seatZ+0.03*dir);box(g,0.05,0.032,0.46,DARK,x+1,0,seatZ+0.03*dir);
+  box(g,0.06,0.29,0.06,DARK,x+1,0.032,seatZ+0.03*dir);
   box(g,0.52,0.08,0.48,chairMat,x+1,0.31,seatZ+0.03*dir);
   box(g,0.5,0.5,0.07,chairMat,x+1,0.38,seatZ+0.31*dir);
   Object.assign(d,{screen:s,chairMat,mug,backMat,approach:n?[x,z+2]:[x,z-1],seat:[x+1,seatZ],seatH:0.38,rot:n?PI:0,owner:null,base:CHAIR_COLS[i%CHAIR_COLS.length],
@@ -488,8 +490,8 @@ for(const sx of[25.3,26.7]){box(scene,0.36,0.05,0.36,SUN,sx,0.72,4.3);box(scene,
 /* Lounge: sky blue sofas, bean bags, a round rug. */
 rug(26,10.5,7,5,0xfde3a6,SUN);
 blockRect(23,8,5,1);blockRect(22,8,1,3);
-box(scene,5,0.38,0.9,SKY,25.5,0,8.5);box(scene,5,0.5,0.25,0x2f8fd0,25.5,0.3,8.12);
-box(scene,0.9,0.38,3,SKY,22.5,0,9.5);box(scene,0.25,0.5,3,0x2f8fd0,22.12,0.3,9.5);
+box(scene,5,0.38,0.9,SKY,25.5,0,8.5);box(scene,4.96,0.5,0.25,0x2f8fd0,25.5,0.3,8.12);
+box(scene,0.9,0.38,3,SKY,22.5,0,9.5);box(scene,0.25,0.5,2.96,0x2f8fd0,22.12,0.3,9.5);
 for(const[cx,c]of[[24,SUN],[25.6,CORAL],[27.2,0xffffff]])box(scene,0.55,0.3,0.14,c,cx,0.38,8.3);
 blockRect(24,10,3,1);
 box(scene,2.6,0.34,0.9,WOOD,25.5,0,10.5);
@@ -573,85 +575,115 @@ const POIS=[
 
 /* ---------- characters ---------- */
 const EYE=0x1b1a24, BOXERS=0x19b4ff, SOLE=0xf4f1ea;
-/* Startup casual: hoodies, oversized tees, coach jackets, caps worn backwards, beanies, big headphones, white sneakers. */
+/* Fabric prints drawn on tiny canvases: stripes, polka dots, checks, tie-dye, florals, paint splatter, rainbow knit. */
+const patCache={};
+function pattern(kind,a,b,c){
+  const key=kind+a+b+c;if(patCache[key])return patCache[key];
+  const n=16,cv=document.createElement('canvas');cv.width=cv.height=n;const g=cv.getContext('2d');
+  const hex=v=>'#'+new THREE.Color(v).getHexString();
+  g.fillStyle=hex(a);g.fillRect(0,0,n,n);g.fillStyle=hex(b);
+  if(kind==='stripe')for(let y=0;y<n;y+=4)g.fillRect(0,y,n,2);
+  else if(kind==='dots'){for(const[x,y]of[[2,2],[10,2],[6,7],[14,7],[2,12],[10,12]])g.fillRect(x,y,3,3);}
+  else if(kind==='check'){for(let y=0;y<n;y+=4)for(let x=0;x<n;x+=4)if(((x+y)/4)%2)g.fillRect(x,y,4,4);}
+  else if(kind==='rainbow'){const cs=[0xf08a6c,0xf6c14f,0x7fd3b0,0x3ba7e8,0xb07ad9];for(let y=0;y<n;y+=3){g.fillStyle=hex(cs[(y/3)%cs.length]);g.fillRect(0,y,n,3);}}
+  else if(kind==='tiedye'){const cs=[a,b,c||0xf6c14f];for(let y=0;y<n;y++)for(let x=0;x<n;x++){const r=Math.hypot(x-8,y-8)+Math.sin(Math.atan2(y-8,x-8)*3)*2;g.fillStyle=hex(cs[Math.floor(r/2.6)%3]);g.fillRect(x,y,1,1);}}
+  else if(kind==='floral'){for(const[x,y]of[[3,3],[11,4],[7,10],[1,12],[13,13]]){g.fillStyle=hex(b);g.fillRect(x-1,y,3,1);g.fillRect(x,y-1,1,3);g.fillStyle=hex(c||0xf6c14f);g.fillRect(x,y,1,1);}}
+  else if(kind==='splat'){const cs=[b,c||0xf08a6c,0x3ba7e8,0xf6c14f];for(let i=0;i<9;i++){g.fillStyle=hex(cs[i%4]);const x=(i*7)%14,y=(i*11)%14;g.fillRect(x,y,2+(i%2),2);g.fillRect(x+1,y+2,1,1);}}
+  const t=new THREE.CanvasTexture(cv);t.magFilter=THREE.NearestFilter;t.minFilter=THREE.NearestFilter;t.generateMipmaps=false;
+  return patCache[key]=new THREE.MeshLambertMaterial({map:t});
+}
+/* Creative-studio fits: a bit funky, a bit cute, nothing matches on purpose. */
 const LOOKS=[
-  {color:0x2f3a4f,acc:0xf3b443,top:'hoodie',pants:0x2a2933,shoe:0xf4f1ea,stripe:0xf3b443,skin:0xf1c9a5,hair:0x3a2a22,hat:'cap',hatCol:0xf3b443,capBack:true},
-  {color:0xf2efe8,acc:0x3f7fd8,top:'tee',pants:0x5a6f9a,shoe:0xf4f1ea,stripe:0x3f7fd8,skin:0xd9a77e,hair:0x1f1b18,glasses:true,phones:0x3f7fd8},
-  {color:0x7d8f5a,acc:0xe9e1d2,top:'jacket',pants:0xd9c7a5,shoe:0x2a2933,stripe:0xe9e1d2,skin:0xeec19a,hair:0x7a4a2a,long:true},
-  {color:0xb07ad9,acc:0xfff6e3,top:'hoodie',pants:0x2a2933,shoe:0xf4f1ea,stripe:0xb07ad9,skin:0xc68e65,hair:0x2b2b2b,hat:'beanie',hatCol:0xe2725b},
-  {color:0x1f1d26,acc:0xe2725b,top:'tee',pants:0x8a7a62,shoe:0xf4f1ea,stripe:0xe2725b,skin:0xe7b98f,hair:0x4a2f22,phones:0xf4f1ea},
-  {color:0xf3b443,acc:0x2a2933,top:'crew',pants:0x2a2933,shoe:0xf4f1ea,stripe:0x2a2933,skin:0xf1c9a5,hair:0x1f1b18,long:true,glasses:true},
-  {color:0x4fb3b0,acc:0xf4f1ea,top:'hoodie',pants:0x5a6f9a,shoe:0x2a2933,stripe:0x4fb3b0,skin:0xd9a77e,hair:0x3a2a22,hat:'cap',hatCol:0x2a2933},
-  {color:0xe2725b,acc:0xfff6e3,top:'jacket',pants:0x2a2933,shoe:0xf4f1ea,stripe:0xe2725b,skin:0xc68e65,hair:0x1f1b18,phones:0x2a2933},
-  {color:0x9fb7d9,acc:0x2f3a4f,top:'crew',pants:0xd9c7a5,shoe:0xf4f1ea,stripe:0x2f3a4f,skin:0xeec19a,hair:0x7a4a2a,hat:'beanie',hatCol:0x2f3a4f},
-  {color:0x2a2933,acc:0x7fd38c,top:'hoodie',pants:0x7d8f5a,shoe:0xf4f1ea,stripe:0x7fd38c,skin:0xe7b98f,hair:0x2b2b2b,glasses:true},
+  {name:'artis',color:0xf4f1ea,pat:['stripe',0xf4f1ea,0x2c4a8c],pants:0x2a2933,sock:0xf08a6c,shoe:0xf6c14f,skin:0xf1c9a5,hair:0x3a2a22,hat:'beret',hatCol:0xd8342f,round:true},
+  {name:'overall',color:0xf6c14f,pants:0x5a8fd6,overall:true,sock:0xf4f1ea,shoe:0xf4f1ea,skin:0xd9a77e,hair:0x1f1b18,hat:'bucket',hatCol:0x7fd3b0},
+  {name:'polkadot',color:0xf5a3c0,pat:['dots',0xf5a3c0,0xffffff],pants:0x7fd3b0,sock:0xf6c14f,shoe:0xf4f1ea,skin:0xeec19a,hair:0x7a4a2a,long:true,hat:'bow',hatCol:0xd8342f},
+  {name:'tiedye',color:0xb07ad9,pat:['tiedye',0xb07ad9,0x8fd0f5,0xf6c14f],top:'hoodie',pants:0x2a2933,sock:0x7fd3b0,shoe:0xf08a6c,skin:0xc68e65,hair:0x2b2b2b,hat:'cat',hatCol:0x2a2933},
+  {name:'propeller',color:0x7fd3b0,pat:['check',0x7fd3b0,0xf4f1ea],pants:0xf6c14f,sock:0xb07ad9,shoe:0x2a2933,skin:0xe7b98f,hair:0x4a2f22,hat:'propeller',hatCol:0x3ba7e8,glasses:true},
+  {name:'apron',color:0x3ba7e8,pants:0x2a2933,apron:true,sock:0xf6c14f,shoe:0xf4f1ea,skin:0xf1c9a5,hair:0x1f1b18,hat:'bandana',hatCol:0xf08a6c},
+  {name:'hawaii',color:0x3ba7e8,pat:['floral',0x3ba7e8,0xffffff,0xf6c14f],pants:0xe9d7b5,sock:0xf08a6c,shoe:0xf4f1ea,skin:0xd9a77e,hair:0x3a2a22,shades:true},
+  {name:'rainbow',color:0xf6c14f,pat:['rainbow'],top:'sweater',pants:0x5a8fd6,sock:0xf5a3c0,shoe:0xf4f1ea,skin:0xc68e65,hair:0x1f1b18,hat:'pompom',hatCol:0xf08a6c},
+  {name:'kodok',color:0xf6c14f,pat:['stripe',0xf6c14f,0xf4f1ea],pants:0x7d8f5a,sock:0x3ba7e8,shoe:0xf08a6c,skin:0xeec19a,hair:0x7a4a2a,long:true,hat:'frog',hatCol:0x6fbf5a},
+  {name:'splat',color:0xf4f1ea,pat:['splat',0xf4f1ea,0xb07ad9,0xf08a6c],pants:0xf5a3c0,sock:0x7fd3b0,shoe:0x2a2933,skin:0xe7b98f,hair:0x2b2b2b,hat:'cap',hatCol:0xf6c14f,round:true},
 ];
 function buildCharacter(d){
   const root=new THREE.Group();
   const legL=new THREE.Group(),legR=new THREE.Group(),armL=new THREE.Group(),armR=new THREE.Group(),head=new THREE.Group();
   legL.position.set(-0.09,0.38,0);legR.position.set(0.09,0.38,0);
-  // top: the colored garment; extras: pocket, print, strings, zip (hidden when stripped); pants; boxers
+  const topMat=d.pat?pattern(...d.pat):mat(d.color);
+  // top: the garment (patterned); extras: overalls, apron, prints (hidden when stripped); pants; boxers
   const cloth={top:[],extras:[],pants:[],belt:null,boxers:[],hood:null};
   for(const l of[legL,legR]){
-    cloth.pants.push(box(l,0.15,0.3,0.17,d.pants,0,-0.3,0));
+    cloth.pants.push(box(l,0.15,0.27,0.17,d.pants,0,-0.27,0));
+    box(l,0.155,0.05,0.172,d.sock,0,-0.32,0,false);
     box(l,0.17,0.07,0.22,d.shoe,0,-0.38,0.02);box(l,0.175,0.025,0.225,SOLE,0,-0.385,0.02,false);
-    box(l,0.02,0.03,0.12,d.stripe,0.088,-0.36,0.02,false);
     cloth.boxers.push(box(l,0.165,0.11,0.185,BOXERS,0,-0.11,0));root.add(l);
   }
-  const loose=d.top==='hoodie'||d.top==='crew';
-  cloth.top.push(box(root,loose?0.43:0.4,0.43,loose?0.27:0.24,d.color,0,0.36,0));
-  cloth.belt=box(root,0.41,0.05,0.25,new THREE.Color(d.color).multiplyScalar(0.75).getHex(),0,0.36,0);
-  cloth.boxers.push(box(root,0.415,0.1,0.255,BOXERS,0,0.33,0));
-  if(d.top==='hoodie'){
-    cloth.hood=box(root,0.3,0.16,0.12,d.color,0,0.7,-0.16);                       // the hood, down on the back
-    cloth.extras.push(box(root,0.26,0.1,0.02,new THREE.Color(d.color).multiplyScalar(0.8).getHex(),0,0.43,0.14,false)); // kangaroo pocket
-    cloth.extras.push(box(root,0.02,0.12,0.02,d.acc,-0.05,0.6,0.14,false),box(root,0.02,0.1,0.02,d.acc,0.05,0.62,0.14,false)); // drawstrings
-  }else if(d.top==='tee'){
-    cloth.extras.push(box(root,0.18,0.14,0.02,d.acc,0,0.55,0.125,false));        // chest print
-  }else if(d.top==='jacket'){
-    cloth.extras.push(box(root,0.1,0.38,0.02,d.acc,0,0.38,0.125,false));         // tee under the open jacket
-    cloth.extras.push(box(root,0.44,0.06,0.27,new THREE.Color(d.color).multiplyScalar(0.8).getHex(),0,0.73,0,false)); // collar
-  }else{
-    cloth.extras.push(box(root,0.44,0.06,0.28,d.acc,0,0.56,0,false));            // a stripe across the sweater
+  const loose=d.top==='hoodie'||d.top==='sweater';
+  cloth.top.push(box(root,loose?0.43:0.4,0.43,loose?0.27:0.24,topMat,0,0.36,0));
+  cloth.belt=box(root,0.41,0.05,0.25,new THREE.Color(d.pants).getHex(),0,0.36,0);
+  cloth.boxers.push(box(root,0.45,0.1,0.29,BOXERS,0,0.33,0));
+  if(d.top==='hoodie')cloth.hood=box(root,0.3,0.16,0.12,topMat,0,0.7,-0.17);
+  if(d.overall){
+    // dungarees: a bib on the chest and two straps, same denim as the trousers
+    cloth.extras.push(box(root,0.3,0.24,0.02,d.pants,0,0.4,0.125,false));
+    cloth.extras.push(box(root,0.05,0.2,0.26,d.pants,-0.13,0.6,0,false),box(root,0.05,0.2,0.26,d.pants,0.13,0.6,0,false));
+    cloth.extras.push(box(root,0.04,0.04,0.02,0xf6c14f,-0.1,0.6,0.14,false),box(root,0.04,0.04,0.02,0xf6c14f,0.1,0.6,0.14,false));
+  }
+  if(d.apron){
+    cloth.extras.push(box(root,0.32,0.42,0.02,pattern('splat',0xf4f1ea,0xb07ad9,0xf08a6c),0,0.12,0.135,false));
+    cloth.extras.push(box(root,0.44,0.03,0.28,0xf4f1ea,0,0.5,0,false));
   }
   armL.position.set(-0.26,0.74,0);armR.position.set(0.26,0.74,0);
-  for(const a of[armL,armR]){cloth.top.push(box(a,loose?0.13:0.12,0.3,loose?0.16:0.15,d.color,0,-0.3,0));box(a,0.11,0.08,0.13,d.skin,0,-0.38,0);root.add(a);}
+  for(const a of[armL,armR]){cloth.top.push(box(a,loose?0.13:0.12,0.3,loose?0.16:0.15,topMat,0,-0.3,0));box(a,0.11,0.08,0.13,d.skin,0,-0.38,0);root.add(a);}
   for(const b of cloth.boxers)b.visible=false;
   head.position.set(0,0.78,0);root.add(head);
   box(head,0.36,0.34,0.34,d.skin,0,0,0);
-  if(d.hat!=='beanie'){
+  const covered=d.hat==='pompom'||d.hat==='cat'||d.hat==='frog';
+  if(!covered){
     box(head,0.38,0.1,0.36,d.hair,0,0.3,-0.01);
     box(head,0.38,0.06,0.07,d.hair,0,0.26,0.15);
     box(head,0.38,d.long?0.4:0.24,0.1,d.hair,0,d.long?-0.08:0.08,-0.14);
     if(d.long){box(head,0.06,0.3,0.3,d.hair,-0.19,0,0);box(head,0.06,0.3,0.3,d.hair,0.19,0,0);}
   }
-  if(d.hat==='cap'){
-    box(head,0.39,0.1,0.37,d.hatCol,0,0.31,-0.01);
-    box(head,0.3,0.03,0.16,d.hatCol,0,0.31,d.capBack?-0.25:0.24);
-    box(head,0.06,0.03,0.06,0xf4f1ea,0,0.41,-0.01,false);
-  }else if(d.hat==='beanie'){
-    box(head,0.39,0.2,0.37,d.hatCol,0,0.24,-0.01);
-    box(head,0.4,0.07,0.38,new THREE.Color(d.hatCol).multiplyScalar(0.8).getHex(),0,0.2,-0.01);
-    box(head,0.08,0.06,0.08,0xf4f1ea,0,0.44,-0.01,false);
+  let prop=null;
+  const H=d.hatCol;
+  switch(d.hat){
+    case'beret':box(head,0.42,0.08,0.4,H,0.04,0.36,-0.02);box(head,0.04,0.05,0.04,H,0.04,0.44,-0.02,false);break;
+    case'bucket':box(head,0.4,0.14,0.38,H,0,0.32,-0.01);box(head,0.52,0.03,0.5,H,0,0.32,-0.01);break;
+    case'bow':box(head,0.16,0.12,0.06,H,0.14,0.38,0.02);box(head,0.16,0.12,0.06,H,0.3,0.38,0.02);box(head,0.07,0.07,0.07,H,0.22,0.405,0.02);break;
+    case'cat':box(head,0.39,0.2,0.37,H,0,0.24,-0.01);box(head,0.09,0.1,0.06,H,-0.13,0.44,-0.01);box(head,0.09,0.1,0.06,H,0.13,0.44,-0.01);
+      box(head,0.05,0.05,0.065,0xf5a3c0,-0.13,0.46,0,false);box(head,0.05,0.05,0.065,0xf5a3c0,0.13,0.46,0,false);break;
+    case'propeller':
+      box(head,0.39,0.1,0.37,H,0,0.31,-0.01);box(head,0.3,0.03,0.12,0xf6c14f,0,0.31,0.23);
+      box(head,0.03,0.08,0.03,0x2a2933,0,0.41,-0.01,false);
+      prop=new THREE.Group();prop.position.set(0,0.5,-0.01);head.add(prop);
+      box(prop,0.36,0.02,0.07,0xd8342f,0,0,0,false);box(prop,0.07,0.02,0.36,0x3ba7e8,0,0.003,0,false);break;
+    case'bandana':box(head,0.385,0.08,0.365,H,0,0.3,-0.01);box(head,0.1,0.1,0.04,H,0.06,0.24,-0.2);break;
+    case'pompom':box(head,0.39,0.2,0.37,H,0,0.24,-0.01);box(head,0.4,0.07,0.38,0xf4f1ea,0,0.2,-0.01);box(head,0.12,0.1,0.12,0xf4f1ea,0,0.44,-0.01);break;
+    case'frog':box(head,0.4,0.16,0.38,H,0,0.3,-0.01);box(head,0.5,0.03,0.48,H,0,0.3,-0.01);
+      for(const ex of[-0.1,0.1]){box(head,0.1,0.1,0.1,H,ex,0.44,0.05);box(head,0.06,0.06,0.02,0xffffff,ex,0.46,0.1,false);box(head,0.03,0.03,0.015,EYE,ex,0.475,0.112,false);}break;
+    case'cap':box(head,0.39,0.1,0.37,H,0,0.31,-0.01);box(head,0.3,0.03,0.16,H,0,0.31,-0.25);break;
   }
   box(head,0.05,0.07,0.02,EYE,-0.08,0.12,0.17,false);
   box(head,0.05,0.07,0.02,EYE,0.08,0.12,0.17,false);
+  box(head,0.06,0.03,0.015,0xf08a6c,-0.13,0.06,0.172,false);box(head,0.06,0.03,0.015,0xf08a6c,0.13,0.06,0.172,false);   // rosy cheeks
   box(head,0.08,0.02,0.02,new THREE.Color(d.skin).multiplyScalar(0.7).getHex(),0,0.04,0.17,false);
+  if(d.round){box(head,0.11,0.1,0.015,0x2a2933,-0.08,0.1,0.178,false);box(head,0.11,0.1,0.015,0x2a2933,0.08,0.1,0.178,false);box(head,0.07,0.06,0.016,0xf4f1ea,-0.08,0.12,0.18,false);box(head,0.07,0.06,0.016,0xf4f1ea,0.08,0.12,0.18,false);}
   if(d.glasses){box(head,0.32,0.03,0.02,0x1b1a24,0,0.17,0.175,false);box(head,0.1,0.08,0.015,0x1b1a24,-0.08,0.1,0.178,false);box(head,0.1,0.08,0.015,0x1b1a24,0.08,0.1,0.178,false);}
-  if(d.phones){box(head,0.42,0.05,0.08,d.phones,0,0.36,0);box(head,0.07,0.15,0.14,d.phones,-0.21,0.05,0);box(head,0.07,0.15,0.14,d.phones,0.21,0.05,0);}
+  if(d.shades){box(head,0.34,0.08,0.02,0x1b1a24,0,0.09,0.178,false);box(head,0.3,0.02,0.021,0xf5a3c0,0,0.15,0.18,false);}
   scene.add(root);
-  return{root,legL,legR,armL,armR,head,cloth,look:d};
+  return{root,legL,legR,armL,armR,head,cloth,look:d,topMat,prop};
 }
 /* Outfit by kind of work: creative work turns the top red, technical work strips down to boxers. */
 const CREATIVE_RED=0xd8342f, BOXERS_BAND=0xf4efe4;
 function dress(m,kind){
   const d=m.look,c=m.cloth,naked=kind==='tech';
-  const top=kind==='creative'?CREATIVE_RED:naked?d.skin:d.color;
-  for(const x of c.top)x.material=mat(top);
-  if(c.hood){c.hood.material=mat(top);c.hood.visible=!naked;}
+  const top=kind==='creative'?mat(CREATIVE_RED):naked?mat(d.skin):m.topMat;
+  for(const x of c.top)x.material=top;
+  if(c.hood){c.hood.material=top;c.hood.visible=!naked;}
   for(const x of c.extras)x.visible=!naked;
   for(const x of c.pants)x.material=mat(naked?d.skin:d.pants);
-  c.belt.material=mat(naked?BOXERS_BAND:new THREE.Color(top).multiplyScalar(0.75).getHex());
+  c.belt.material=mat(naked?BOXERS_BAND:d.pants);
   c.belt.visible=true;
   for(const x of c.boxers)x.visible=naked;
 }
@@ -845,6 +877,7 @@ class Agent{
     m.legL.rotation.x=L.legL;m.legR.rotation.x=L.legR;
     m.armL.rotation.x=L.armL;m.armR.rotation.x=L.armR;m.armL.rotation.z=L.armLz;m.armR.rotation.z=L.armRz;
     m.head.rotation.x=L.head;m.head.rotation.y=L.headY;
+    if(m.prop)m.prop.rotation.y+=dt*(this.state==='walking'?22:9);
     this.pos.y=this.y;
     let dr=((this.rotTarget-this.rot+PI)%(2*PI)+2*PI)%(2*PI)-PI;
     this.rot+=dr*Math.min(1,dt*10);m.root.rotation.y=this.rot;
@@ -1122,6 +1155,13 @@ function setWall(on){
 $('#wallBtn').addEventListener('click',()=>setWall(true));
 $('#wallExit').addEventListener('click',()=>setWall(false));
 canvas.addEventListener('pointerdown',()=>{lastTouch=performance.now();});
+canvas.addEventListener('pointermove',()=>{if(drag)lastTouch=performance.now();});
+/* Auto spin: on by default, remembered per device. Dragging pauses it, and it picks up again 3 seconds after you let go. */
+let spin=true;try{spin=localStorage.getItem('kantor-spin')!=='0';}catch(e){}
+function setSpin(on){spin=on;$('#spinBtn').setAttribute('aria-pressed',String(on));try{localStorage.setItem('kantor-spin',on?'1':'0');}catch(e){}}
+setSpin(spin);
+$('#spinBtn').addEventListener('click',()=>{setSpin(!spin);lastTouch=-1e9;});
+window.addEventListener('keydown',e=>{if(e.target.closest&&e.target.closest('input'))return;if(e.key==='r'||e.key==='R')setSpin(!spin);});
 stage.addEventListener('wheel',()=>{lastTouch=performance.now();});
 {let saved=null;try{saved=localStorage.getItem('kantor-wall');}catch(e){}setWall(FORCED_WALL||/wallpaper/.test(location.hash)||saved==='1');}
 
@@ -1132,7 +1172,7 @@ function frame(now){
   // A wallpaper runs all day, so it draws at about 30 fps to spare the battery.
   if(wall&&now-last<32){requestAnimationFrame(frame);return;}
   const dt=Math.min(0.05,(now-last)/1000);last=now;time+=dt;
-  if(wall&&now-lastTouch>20000)camTarget+=dt*0.035;
+  if((wall||spin)&&!drag&&now-lastTouch>3000)camTarget+=dt*0.035;
   camAngle+=(camTarget-camAngle)*Math.min(1,dt*6);zoom+=(zoomTarget-zoom)*Math.min(1,dt*8);
   placeCamera();
   for(const[key,a]of agents){if(a.gone){agents.delete(key);continue;}a.update(dt);}

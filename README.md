@@ -41,7 +41,8 @@ Halaman dan datanya ada di `~/.claude/kantor-agent/`. Setiap sesi Claude Code me
 
 - **Nama karyawan = judul chat.** Hook plugin menerima judul percakapan dari Claude (`session_title`) dan menyimpannya di `~/.claude/kantor-agent/titles/`. Kalau judulnya belum ada, plugin bikin judul pendek sendiri dari permintaan pertama.
 - **Creative studio ala Dapu:** pod meja Mac di atas karpet warna-warni, dinding tegel biru dengan logo dapu, pegboard, mood board ilustrasi, meja craft, UV printer, meja jahit, rak hampers, pojok foto produk berlatar biru, café, dan lounge.
-- **Baju santai:** hoodie, tee, jaket, topi, beanie, headphone, sneakers. Merah tetap untuk kerjaan kreatif, kolor untuk yang pakai tools.
+- **Baju funky:** kemeja garis dan baret, overall dan bucket hat, polkadot dan pita, hoodie tie-dye dan beanie kuping kucing, topi baling-baling, celemek cat, kemeja bunga dan kacamata hitam, sweater pelangi, topi kodok. Merah tetap untuk kerjaan kreatif, kolor untuk yang pakai tools.
+- **Putar otomatis:** tombol ⟳ (atau R). Habis kamu geser kameranya, dia muter lagi sendiri setelah 3 detik.
 - **Klik orangnya:** dia jawab lewat balon omongan sesuai yang lagi dia kerjain.
 - **Panel ringkas:** Kerja, Santai, Beres, lalu satu baris per karyawan: lagi ngerjain apa, mulai jam berapa dan sudah berapa lama, atau selesai jam berapa.
 
