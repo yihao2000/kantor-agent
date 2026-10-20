@@ -1,6 +1,6 @@
 {
   "name": "kantor-agent",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Kantor isometrik di panel: tiap sesi Claude dan sub agent jadi karyawan yang duduk ngetik saat kerja dan jalan-jalan saat santai.",
   "author": { "name": "yihao2000" },
   "types": "./types/index.d.ts"

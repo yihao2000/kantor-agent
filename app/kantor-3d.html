@@ -14,7 +14,7 @@
 <title>Kantor Agent 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=Atkinson+Hyperlegible:wght@400;700&family=Poppins:wght@600;800&display=swap" rel="stylesheet">
 <style>
 /* Layout: the office diorama as the stage, a live roster column on the right (stacks under the stage on narrow windows) */
 :root{
@@ -249,32 +249,31 @@ function findPath(sx,sz,gx,gz){
   return null;
 }
 
-/* ---------- floor: polished concrete, oak in the lounge and game corner, tiles in the café ---------- */
-const ZONES={cafe:{x:23,z:0,w:7,d:7},lounge:{x:22,z:8,w:8,d:7},game:{x:22,z:15,w:8,d:5}};
+/* ---------- floor: warm oak studio floor, tiles in the café, concrete in the photo corner, a colored rug under each desk pod ---------- */
+const ZONES={cafe:{x:23,z:0,w:7,d:6},photo:{x:22,z:15,w:8,d:5}};
 const inZone=(zn,x,z)=>x>=zn.x&&x<zn.x+zn.w&&z>=zn.z&&z<zn.z+zn.d;
+// Dapu colors: navy, sky blue, white, with the warm pops from the illustrations
+const NAVY=0x2c4a8c, SKY=0x3ba7e8, SKY2=0x8fd0f5, CREAM=0xfff6e3, SUN=0xf6c14f, CORAL=0xf08a6c, MINT=0x7fd3b0, PINK=0xf5a3c0;
 (function(){
-  const conc=[0xb9b7b3,0xbfbdb9,0xb4b2ae,0xbcbab6];
-  const oak=[0xc9a27a,0xd2ab82,0xbf9870,0xcca57c];
+  const oak=[0xe6d0ad,0xecd8b6,0xe0c8a3,0xe9d4b0];
   const tiles=[];
   for(let x=0;x<GW;x++)for(let z=0;z<GD;z++){
-    if(inZone(ZONES.cafe,x,z)){tiles.push([x+0.5,z+0.5,0.97,0.97,(x+z)%2?0xe9e1d2:0xcdbb9c]);continue;}
-    if(inZone(ZONES.lounge,x,z)||inZone(ZONES.game,x,z)){for(let r=0;r<2;r++)tiles.push([x+0.5,z+0.25+r*0.5,0.97,0.47,oak[(x*7+z*13+r*5)%4]]);continue;}
-    tiles.push([x+0.5,z+0.5,0.995,0.995,conc[(x*3+z*5)%4]]);
+    if(inZone(ZONES.cafe,x,z)){tiles.push([x+0.5,z+0.5,0.97,0.97,(x+z)%2?0xffffff:0xcfe8f7]);continue;}
+    if(inZone(ZONES.photo,x,z)){tiles.push([x+0.5,z+0.5,0.995,0.995,[0xbdbab4,0xc3c0ba][(x+z)%2]]);continue;}
+    for(let r=0;r<2;r++)tiles.push([x+0.5,z+0.25+r*0.5,0.97,0.47,oak[(x*7+z*13+r*5)%4]]);
   }
   const inst=new THREE.InstancedMesh(new THREE.BoxGeometry(1,0.06,1),new THREE.MeshLambertMaterial({color:0xffffff}),tiles.length);
   const m4=new THREE.Matrix4(),col=new THREE.Color();
   tiles.forEach(([x,z,w,d,c],i)=>{m4.makeScale(w,1,d);m4.setPosition(x,-0.03,z);inst.setMatrixAt(i,m4);inst.setColorAt(i,col.setHex(c));});
   inst.instanceMatrix.needsUpdate=true;inst.instanceColor.needsUpdate=true;
   inst.receiveShadow=true;scene.add(inst);
-  box(scene,GW,0.02,GD,0x8f8b84,GW/2,-0.07,GD/2,false);
+  box(scene,GW,0.02,GD,0x9a7c5a,GW/2,-0.07,GD/2,false);
   box(scene,GW+0.4,0.4,GD+0.4,0x2f2b38,GW/2,-0.47,GD/2,false);
-  // lounge rug
-  box(scene,6.6,0.03,4.6,0x3f4a6e,26,0,12,false);
-  box(scene,6.0,0.035,4.0,0x56649a,26,0,12,false);
 })();
+function rug(cx,cz,w,d,c,c2){box(scene,w,0.025,d,c2,cx,0,cz,false);box(scene,w-0.4,0.03,d-0.4,c,cx,0,cz,false);}
 
 /* ---------- walls ---------- */
-const WALL_H=3.2, WALL=0xe9e5dd, WALL2=0xdcd7ce, BASE=0x3a3644, CAP=0x4a4655;
+const WALL_H=3.2, WALL=0xf6f1e7, WALL2=0xece6da, BASE=0x2c4a8c, CAP=0x3a3644;
 function wallGroup(normal){const g=new THREE.Group();g.userData.n=normal;scene.add(g);return g;}
 const wallBack=wallGroup([0,-1]), wallLeft=wallGroup([-1,0]), wallFront=wallGroup([0,1]), wallRight=wallGroup([1,0]);
 const walls=[wallBack,wallLeft,wallFront,wallRight];
@@ -289,210 +288,287 @@ box(wallFront,GW+0.4,0.08,0.24,CAP,GW/2,WALL_H,GD+0.1,false);
 box(wallRight,0.2,WALL_H,GD+0.4,WALL2,GW+0.1,0,GD/2,false);
 box(wallRight,0.24,0.08,GD+0.4,CAP,GW+0.1,WALL_H,GD/2,false);
 
-/* The big sign: DAPU GIFT STUDIO in warm light on a wood slat wall, center of the back wall. */
-(function(){
-  const sx=11.5,sw=13;
-  for(let i=0;i<sw/0.26;i++)box(wallBack,0.2,2.5,0.08,i%2?0x9b6b45:0xa8774f,sx-sw/2+0.13+i*0.26,0.45,0.04,false);
-  box(wallBack,sw+0.2,0.08,0.14,0x6e4a30,sx,0.41,0.07,false);
-  box(wallBack,sw+0.2,0.08,0.14,0x6e4a30,sx,2.95,0.07,false);
-  const c=document.createElement('canvas');c.width=2048;c.height=320;
+/* Blue and white patterned tiles, like the wall in the Dapu studio. */
+function tileTex(cells){
+  const n=32,c=document.createElement('canvas');c.width=n*cells;c.height=n;
   const g=c.getContext('2d');
-  g.clearRect(0,0,2048,320);
-  g.textAlign='center';g.textBaseline='middle';
-  g.font='900 168px "Helvetica Neue",Helvetica,Arial,sans-serif';
-  g.shadowColor='rgba(255,214,140,0.95)';g.shadowBlur=36;
-  g.fillStyle='#fff6e3';
-  const txt='DAPU GIFT STUDIO';
-  // letter spacing by hand, so the sign reads wide like real channel letters
-  const spacing=14;let w=0;for(const ch of txt)w+=g.measureText(ch).width+spacing;w-=spacing;
-  let x=1024-w/2;
-  for(const ch of txt){const cw=g.measureText(ch).width;g.fillText(ch,x+cw/2,150);x+=cw+spacing;}
-  g.shadowBlur=0;g.font='700 44px "Helvetica Neue",Helvetica,Arial,sans-serif';g.fillStyle='#f3c98b';
-  g.fillText('K A N T O R   A G E N T',1024,272);
-  const t=new THREE.CanvasTexture(c);t.anisotropy=4;
-  const sign=new THREE.Mesh(new THREE.PlaneGeometry(11.6,1.81),new THREE.MeshBasicMaterial({map:t,transparent:true}));
-  sign.position.set(sx,1.72,0.16);wallBack.add(sign);
-  const glow=new THREE.PointLight(0xffd9a0,0.55,9);glow.position.set(sx,1.7,1.6);scene.add(glow);
+  for(let i=0;i<cells;i++){
+    const o=i*n;g.fillStyle='#f4f8fc';g.fillRect(o,0,n,n);
+    g.fillStyle='#2c63b8';g.fillRect(o+14,2,4,28);g.fillRect(o+2,14,28,4);
+    g.fillStyle='#5aa3e0';g.beginPath();g.moveTo(o+16,6);g.lineTo(o+26,16);g.lineTo(o+16,26);g.lineTo(o+6,16);g.closePath();g.fill();
+    g.fillStyle='#f4f8fc';g.fillRect(o+13,13,6,6);
+    g.fillStyle='#2c63b8';for(const[a,b]of[[3,3],[27,3],[3,27],[27,27]])g.fillRect(o+a-2,b-2,4,4);
+    g.strokeStyle='#c9d7ea';g.strokeRect(o+0.5,0.5,n-1,n-1);
+  }
+  const t=new THREE.CanvasTexture(c);t.magFilter=THREE.NearestFilter;t.minFilter=THREE.LinearMipMapLinearFilter;return t;
+}
+(function(){
+  // tiled feature wall behind the logo
+  const tw=10,th=2.9,tex=tileTex(1);tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.repeat.set(tw/0.5,th/0.5);
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(tw,th),new THREE.MeshLambertMaterial({map:tex}));
+  m.position.set(16,0.16+th/2,0.02);wallBack.add(m);
+  // the logo: lowercase "dapu" with a small "✳ gift studio", on a white board, lit from below
+  box(wallBack,5.4,2.0,0.1,0xffffff,16,0.75,0.07,false);
+  box(wallBack,5.6,0.06,0.16,NAVY,16,0.7,0.1,false);
+  const c=document.createElement('canvas');c.width=1350;c.height=500;
+  const draw=()=>{
+    const g=c.getContext('2d');g.clearRect(0,0,1350,500);g.fillStyle='#111015';
+    g.textBaseline='alphabetic';g.textAlign='center';
+    g.font='800 360px Poppins,"Helvetica Neue",Arial,sans-serif';g.fillText('dapu',675,330);
+    g.font='600 74px Poppins,"Helvetica Neue",Arial,sans-serif';g.textAlign='left';
+    const w=g.measureText('gift studio').width;g.fillText('gift studio',1085-w,440);
+    g.font='700 70px "Helvetica Neue",Arial,sans-serif';g.fillText('✳',1085-w-80,440);
+    signTex.needsUpdate=true;
+  };
+  const signTex=new THREE.CanvasTexture(c);signTex.anisotropy=4;
+  draw();if(document.fonts&&document.fonts.load)document.fonts.load('800 100px Poppins').then(draw).catch(()=>{});
+  const sign=new THREE.Mesh(new THREE.PlaneGeometry(5.0,1.85),new THREE.MeshBasicMaterial({map:signTex,transparent:true}));
+  sign.position.set(16,1.75,0.13);wallBack.add(sign);
+  const glow=new THREE.PointLight(0xdcefff,0.5,8);glow.position.set(16,1.2,2.2);scene.add(glow);
 })();
 
-/* Floor-to-ceiling windows on the left wall, city outside. */
-const sky=pixTex(96,24);
+/* Big windows on the left wall, Tangerang skyline outside. */
+const sky=pixTex(64,24);
 (function(){
   const g=sky.g;
-  const bands=['#f6c58a','#f2b37d','#d99a84','#a98aa6','#7e86b3'];
-  for(let i=0;i<24;i++){g.fillStyle=bands[Math.min(4,Math.floor((23-i)/4.8))];g.fillRect(0,i,96,1);}
-  g.fillStyle='#fff3d6';g.fillRect(70,5,5,5);
+  const bands=['#9fd8f7','#b8e2f8','#d6ecf6','#f7e2c4','#f6c58a'];
+  for(let i=0;i<24;i++){g.fillStyle=bands[Math.min(4,Math.floor(i/4.8))];g.fillRect(0,i,64,1);}
+  g.fillStyle='#ffffff';g.fillRect(8,4,7,2);g.fillRect(10,3,4,1);g.fillRect(40,6,9,2);g.fillRect(43,5,4,1);
   let x=0,k=3;
-  while(x<96){const w=4+(k*7)%6,y=6+(k*11)%11;g.fillStyle=k%3?'#3b3757':'#45406a';g.fillRect(x,y,w,24-y);
-    g.fillStyle='#f6d27a';for(let yy=y+1;yy<23;yy+=2)for(let xx=x+1;xx<x+w-1;xx+=2)if((xx*3+yy*7)%5===0)g.fillRect(xx,yy,1,1);
+  while(x<64){const w=4+(k*7)%6,y=9+(k*11)%9;g.fillStyle=k%3?'#6c86b8':'#5a74a8';g.fillRect(x,y,w,24-y);
+    g.fillStyle='#dbe8f7';for(let yy=y+1;yy<23;yy+=2)for(let xx=x+1;xx<x+w-1;xx+=2)if((xx*3+yy*7)%4===0)g.fillRect(xx,yy,1,1);
     x+=w+1;k++;}
   sky.t.needsUpdate=true;
 })();
-box(wallLeft,0.1,0.12,12.4,0x2d2a3a,0.05,0.45,8,false);
-box(wallLeft,0.1,0.12,12.4,0x2d2a3a,0.05,2.95,8,false);
-screenPlane(wallLeft,12.2,2.4,sky.t,0.08,1.75,8,PI/2);
-for(let i=0;i<=6;i++)box(wallLeft,0.12,2.5,0.08,0x2d2a3a,0.06,0.45,1.9+i*2.03,false);
+box(wallLeft,0.1,0.12,8.2,0x2d2a3a,0.05,0.45,5.5,false);
+box(wallLeft,0.1,0.12,8.2,0x2d2a3a,0.05,2.95,5.5,false);
+screenPlane(wallLeft,8.0,2.4,sky.t,0.08,1.75,5.5,PI/2);
+for(let i=0;i<=4;i++)box(wallLeft,0.12,2.5,0.08,0x2d2a3a,0.06,0.45,1.5+i*2,false);
 
-/* Clock and a small "Dapu wall of fame" frame grid on the back wall, left of the sign. */
-box(wallBack,0.56,0.56,0.05,0x2d2a3a,2.6,2.2,0.03,false);
-box(wallBack,0.46,0.46,0.02,0xfff8ea,2.6,2.25,0.06,false);
-const hourHand=box(wallBack,0.03,0.12,0.02,0x2d2a3a,2.6,2.47,0.08,false);
-[[1.6,1.1,0xf3b443],[2.6,1.1,0x7fd38c],[3.6,1.1,0x8db4ff],[1.6,1.65,0xd0a6ff],[3.6,1.65,0xf4a8a0]]
-  .forEach(([x,y,c])=>{box(wallBack,0.62,0.42,0.04,0x2d2a3a,x,y,0.03,false);box(wallBack,0.52,0.32,0.02,c,x,y+0.05,0.06,false);});
+/* Mood board on the left wall: illustration prints in Dapu colors. */
+(function(){
+  const cols=[SKY,SUN,CORAL,MINT,PINK,NAVY,SKY2,0xffffff];
+  box(wallLeft,0.05,1.9,3.6,0xc9a27a,0.03,0.7,12.2,false);
+  let k=0;
+  for(let r=0;r<3;r++)for(let i=0;i<5;i++){
+    const w=0.5+((k*7)%3)*0.08,h=0.42+((k*5)%3)*0.06;
+    box(wallLeft,0.02,h,w,0xffffff,0.07,0.85+r*0.6,10.7+i*0.72,false);
+    box(wallLeft,0.02,h-0.1,w-0.1,cols[k%cols.length],0.09,0.9+r*0.6,10.7+i*0.72,false);
+    box(wallLeft,0.02,0.06,0.06,CORAL,0.1,0.85+r*0.6+h-0.05,10.7+i*0.72,false);
+    k++;
+  }
+})();
+
+/* Pegboard with tools on the back wall, left side, and a clock. */
+box(wallBack,4.6,1.6,0.04,0xc9a27a,4.6,1.0,0.02,false);
+for(let i=0;i<9;i++)for(let j=0;j<5;j++)box(wallBack,0.03,0.03,0.01,0x9a7c5a,2.6+i*0.5,1.15+j*0.3,0.05,false);
+[[2.9,1.9,0.5,0.06,CORAL],[3.5,1.5,0.06,0.5,NAVY],[4.1,1.95,0.4,0.4,SUN],[4.8,1.4,0.08,0.6,0x2d2a3a],[5.4,1.9,0.5,0.3,SKY],[6.1,1.45,0.3,0.55,MINT],[3.2,1.15,0.7,0.12,PINK],[5.6,1.15,0.6,0.1,0x2d2a3a]]
+  .forEach(([x,y,w,h,c])=>box(wallBack,w,h,0.05,c,x,y,0.05,false));
+box(wallBack,0.56,0.56,0.05,0x2d2a3a,9.5,2.25,0.03,false);
+box(wallBack,0.46,0.46,0.02,0xfff8ea,9.5,2.3,0.06,false);
+const hourHand=box(wallBack,0.03,0.12,0.02,0x2d2a3a,9.5,2.52,0.08,false);
 
 /* ---------- furniture ---------- */
-const DARK=0x2d2a3a, WOOD=0x8a6340, DESK_TOP=0xf2efe8, FRAME=0x2b2934, ALU=0xc9ccd1;
+const DARK=0x2d2a3a, WOOD=0xb98a5a, PLY=0xe8d2ad, FRAME=0x2b2934, ALU=0xc9ccd1;
 const SCREEN_COLS=['#7fd38c','#8db4ff','#f3b443','#d0a6ff','#efe8d8'];
-// Two clusters of bench desks, three rows each, every worker facing the sign.
+/* Desk pods: four Macs face to face on a plywood table, a colored rug under each pod. */
 const DESKS=[];
-for(const z of[4,8,12])for(const x of[2,4,6,8,12,14,16,18])DESKS.push({x,z});
-function buildDesk(d){
+const PODS=[{x:2,z:3,c:SKY2,c2:SKY},{x:7,z:3,c:0xfde3a6,c2:SUN},{x:2,z:10,c:0xf9c9b9,c2:CORAL},{x:7,z:10,c:0xc4ecd9,c2:MINT}];
+for(const p of PODS){
+  rug(p.x+2,p.z+2,4.6,5.2,p.c,p.c2);
+  for(const dx of[0,2]){DESKS.push({x:p.x+dx,z:p.z,face:'s'});DESKS.push({x:p.x+dx,z:p.z+2,face:'n'});}
+}
+const CHAIR_COLS=[SKY,SUN,CORAL,MINT,PINK,NAVY];
+function buildDesk(d,i){
   const x=d.x,z=d.z,g=new THREE.Group();scene.add(g);
   blockRect(x,z,2,2);
-  box(g,2,0.05,0.95,DESK_TOP,x+1,0.57,z+0.5);
-  box(g,2,0.03,0.04,0xd8d3c8,x+1,0.56,z+0.97);
-  // a black steel frame shared along the bench
-  for(const ax of[0.06,1.94]){box(g,0.05,0.57,0.05,FRAME,x+ax,0,z+0.12);box(g,0.05,0.57,0.05,FRAME,x+ax,0,z+0.88);box(g,0.05,0.05,0.8,FRAME,x+ax,0.08,z+0.5);}
-  // a desktop Mac: thin colored back, white bezel, aluminium stand
+  // 'n': the worker sits at the front (z+1.35) facing the back wall; 's': at the back (z+0.65) facing the room
+  const n=d.face!=='s',top=n?z+0.5:z+1.5,mon=n?z+0.3:z+1.7,dir=n?1:-1,seatZ=n?z+1.35:z+0.65;
+  box(g,2,0.06,0.95,PLY,x+1,0.57,top);
+  box(g,2,0.03,0.04,0xc9a27a,x+1,0.56,top+0.47*dir);
+  for(const ax of[0.08,1.92])for(const az of[-0.38,0.38])box(g,0.06,0.57,0.06,WOOD,x+ax,0,top+az);
+  // a desktop Mac: colored back, white bezel, aluminium stand
   const backMat=new THREE.MeshLambertMaterial({color:ALU});
-  box(g,0.12,0.02,0.16,ALU,x+1,0.62,z+0.32);
-  box(g,0.1,0.26,0.03,ALU,x+1,0.62,z+0.26);
-  box(g,0.98,0.62,0.035,backMat,x+1,0.78,z+0.28);
-  box(g,0.98,0.1,0.045,0xeeeeea,x+1,0.78,z+0.31);
-  box(g,0.92,0.48,0.012,0xf7f7f4,x+1,0.89,z+0.304);
+  box(g,0.12,0.02,0.16,ALU,x+1,0.63,mon);
+  box(g,0.1,0.26,0.03,ALU,x+1,0.63,mon-0.04*dir);
+  box(g,0.98,0.62,0.035,backMat,x+1,0.79,mon-0.02*dir);
+  box(g,0.98,0.1,0.045,0xeeeeea,x+1,0.79,mon+0.01*dir);
+  box(g,0.92,0.48,0.012,0xf7f7f4,x+1,0.9,mon+0.004*dir);
   const s=pixTex(48,28);
-  screenPlane(g,0.86,0.46,s.t,x+1,1.13,z+0.312);
-  box(g,0.5,0.015,0.15,0xf4f4f1,x+1,0.62,z+0.72);
-  box(g,0.07,0.015,0.11,0xf4f4f1,x+1.42,0.62,z+0.72);
-  const mug=box(g,0.09,0.11,0.09,0xe8e3d6,x+1.72,0.62,z+0.6);
-  if((x+z)%4===0){box(g,0.1,0.12,0.1,0xb35f3e,x+0.24,0.62,z+0.3);box(g,0.14,0.12,0.14,0x5aa05f,x+0.24,0.74,z+0.3);}
-  else box(g,0.26,0.03,0.2,0xf2eee4,x+0.32,0.62,z+0.62);
-  // mesh office chair
-  const chairMat=new THREE.MeshLambertMaterial({color:0x3a3846});
-  box(g,0.46,0.03,0.05,DARK,x+1,0,z+1.38);box(g,0.05,0.03,0.46,DARK,x+1,0,z+1.38);
-  box(g,0.06,0.3,0.06,DARK,x+1,0.02,z+1.38);
-  box(g,0.52,0.07,0.48,chairMat,x+1,0.31,z+1.38);
-  box(g,0.5,0.55,0.06,0x24222c,x+1,0.38,z+1.66);
-  box(g,0.5,0.06,0.07,chairMat,x+1,0.9,z+1.66);
-  Object.assign(d,{screen:s,chairMat,mug,backMat,approach:[x,z+2],seat:[x+1,z+1.35],seatH:0.38,owner:null,
-    claim(a){d.owner=a;d.chairMat.color.set(a.look.color);d.backMat.color.set(a.look.color);d.mug.material=mat(a.look.color);},
-    release(){d.owner=null;d.chairMat.color.set(0x3a3846);d.backMat.color.set(ALU);d.mug.material=mat(0xe8e3d6);}});
+  screenPlane(g,0.86,0.46,s.t,x+1,1.14,mon+0.012*dir,n?0:PI);
+  box(g,0.5,0.015,0.15,0xf4f4f1,x+1,0.63,top+0.22*dir);
+  box(g,0.07,0.015,0.11,0xf4f4f1,x+1.42,0.63,top+0.22*dir);
+  const mug=box(g,0.09,0.11,0.09,0xe8e3d6,x+1.72,0.63,top+0.1*dir);
+  if(i%3===0){box(g,0.1,0.12,0.1,0xb35f3e,x+0.24,0.63,top-0.2*dir);box(g,0.14,0.12,0.14,0x5aa05f,x+0.24,0.75,top-0.2*dir);}
+  else if(i%3===1){box(g,0.3,0.04,0.22,[SUN,PINK,MINT][i%3],x+0.32,0.63,top+0.1*dir);box(g,0.26,0.04,0.2,0xffffff,x+0.32,0.67,top+0.1*dir);}
+  else box(g,0.18,0.2,0.18,SKY,x+0.3,0.63,top-0.15*dir);
+  // a colorful chair
+  const chairMat=new THREE.MeshLambertMaterial({color:CHAIR_COLS[i%CHAIR_COLS.length]});
+  box(g,0.46,0.03,0.05,DARK,x+1,0,seatZ+0.03*dir);box(g,0.05,0.03,0.46,DARK,x+1,0,seatZ+0.03*dir);
+  box(g,0.06,0.3,0.06,DARK,x+1,0.02,seatZ+0.03*dir);
+  box(g,0.52,0.08,0.48,chairMat,x+1,0.31,seatZ+0.03*dir);
+  box(g,0.5,0.5,0.07,chairMat,x+1,0.38,seatZ+0.31*dir);
+  Object.assign(d,{screen:s,chairMat,mug,backMat,approach:n?[x,z+2]:[x,z-1],seat:[x+1,seatZ],seatH:0.38,rot:n?PI:0,owner:null,base:CHAIR_COLS[i%CHAIR_COLS.length],
+    claim(a){d.owner=a;d.backMat.color.set(a.look.color);d.mug.material=mat(a.look.color);},
+    release(){d.owner=null;d.backMat.color.set(ALU);d.mug.material=mat(0xe8e3d6);}});
 }
-function plant(x,z,tall=false){
+function plant(x,z,tall=false,pot=0xf6f1e7){
   const g=new THREE.Group();scene.add(g);blockRect(x,z);
   const cx=x+0.5,cz=z+0.5;
-  box(g,0.46,0.4,0.46,tall?0xe9e5dd:0x3a3644,cx,0,cz);
+  box(g,0.46,0.4,0.46,pot,cx,0,cz);
   box(g,0.4,0.04,0.4,0x4a3326,cx,0.4,cz);
-  const h=tall?1.5:0.7,greens=[0x4f9a57,0x5fb16a,0x437f4b],n=tall?9:4;
-  for(let i=0;i<n;i++)box(g,0.2+((i*37)%5)*0.04,0.22+((i*13)%4)*0.04,0.2+((i*53)%5)*0.04,greens[i%3],cx+(((i*7)%5)-2)*0.07,0.42+i*(h/n),cz+(((i*11)%5)-2)*0.07);
+  const h=tall?1.5:0.7,greens=[0x4f9a57,0x5fb16a,0x437f4b],k=tall?9:4;
+  for(let i=0;i<k;i++)box(g,0.2+((i*37)%5)*0.04,0.22+((i*13)%4)*0.04,0.2+((i*53)%5)*0.04,greens[i%3],cx+(((i*7)%5)-2)*0.07,0.42+i*(h/k),cz+(((i*11)%5)-2)*0.07);
 }
 DESKS.forEach(buildDesk);
-// planters between the two clusters, and greenery around the room
-for(const z of[4,5,8,9,12,13])plant(10,z,z%4===0);
-plant(0,0,true);plant(21,0,true);plant(0,15);plant(21,7);plant(21,14,true);plant(29,7);plant(29,19,true);plant(0,19);
+plant(0,0,true,NAVY);plant(11,0,true,SUN);plant(21,0,true,SKY);plant(0,8);plant(6,1,false,CORAL);plant(6,8,false,MINT);plant(12,8,true,PINK);plant(0,19,true,SKY);plant(21,14,true,NAVY);plant(29,6);plant(12,14,false,SUN);
 
-/* Café: counter with espresso machine along the back wall, fridge, high table with stools. */
+/* The workshop: a big plywood craft table with fabric, boxes and illustrations, a UV printer and a sewing station (Dapu Jahit). */
+blockRect(14,5,5,2);
+box(scene,5,0.08,1.8,PLY,16.5,0.82,6);
+for(const[lx,lz]of[[14.15,5.2],[18.85,5.2],[14.15,6.8],[18.85,6.8]])box(scene,0.1,0.82,0.1,WOOD,lx,0,lz);
+box(scene,4.8,0.04,1.6,0x7fbf8a,16.5,0.86,6,false);                              // cutting mat
+[[14.8,5.6,0.6,0.25,0.45,SKY],[15.5,5.55,0.45,0.3,0.4,0xffffff],[18.2,6.4,0.7,0.18,0.5,NAVY]].forEach(([x,z,w,h,d,c])=>box(scene,w,h,d,c,x,0.9,z));
+box(scene,0.5,0.02,0.36,0xffffff,16.3,0.9,6.3);box(scene,0.4,0.022,0.28,CORAL,16.3,0.9,6.3);    // illustration prints
+box(scene,0.5,0.02,0.36,0xffffff,17.1,0.9,5.7);box(scene,0.4,0.022,0.28,SUN,17.1,0.9,5.7);
+box(scene,0.18,0.18,1.0,PINK,17.4,0.9,6.55);box(scene,0.18,0.18,1.0,SKY2,17.65,0.9,6.55);       // fabric rolls
+for(const sx of[15,16.5,18])for(const sz of[4.3,7.7])box(scene,0.36,0.05,0.36,[SUN,SKY,CORAL][Math.round(sx)%3],sx,0.6,sz),box(scene,0.05,0.6,0.05,FRAME,sx,0,sz);
+// UV printer
+blockRect(14,9,2,1);
+box(scene,1.8,0.8,0.9,0xe9ecef,15,0,9.5);box(scene,1.5,0.08,0.7,0x2d2a3a,15,0.8,9.5);
+box(scene,1.9,0.22,0.3,0x3a3846,15,0.88,9.2);box(scene,0.2,0.08,0.06,SKY,14.3,1.1,9.3,false);
+for(let i=0;i<3;i++)box(scene,0.3,0.02,0.2,[SUN,CORAL,MINT][i],14.6+i*0.4,0.88,9.7);
+// sewing station
+blockRect(17,9,2,1);
+box(scene,1.8,0.06,0.8,PLY,18,0.72,9.5);
+for(const lx of[17.15,18.85])box(scene,0.06,0.72,0.7,WOOD,lx,0,9.5);
+box(scene,0.6,0.3,0.24,0xf4f1ea,18,0.78,9.45);box(scene,0.14,0.2,0.24,0xf4f1ea,17.75,1.08,9.45);box(scene,0.5,0.08,0.2,0xf4f1ea,18,1.22,9.45);
+box(scene,0.6,0.02,0.4,CORAL,18.5,0.78,9.6);
+box(scene,0.36,0.05,0.36,NAVY,18,0.46,10.4);box(scene,0.05,0.46,0.05,FRAME,18,0,10.4);
+
+/* Hampers shelf: open shelving full of colorful gift boxes, totes and tumblers. */
+blockRect(13,16,6,1);
+(function(){
+  for(const lx of[13.05,16,18.95])box(scene,0.08,2,0.6,WOOD,lx,0,16.4);
+  const items=[SKY,NAVY,SUN,CORAL,0xffffff,MINT,PINK,SKY2];
+  for(const y of[0.05,0.7,1.35]){
+    box(scene,5.9,0.05,0.6,PLY,16,y,16.4,false);
+    let x=13.2,k=Math.round(y*13);
+    while(x<18.7){const w=0.35+(k%3)*0.12,h=0.22+(k%4)*0.08,c=items[k%items.length];
+      if(k%5===3){box(scene,0.12,0.36,0.12,c,x+0.06,y+0.05,16.4);x+=0.2;}            // tumbler
+      else{box(scene,w,h,0.42,c,x+w/2,y+0.05,16.4);box(scene,w+0.01,0.03,0.43,k%2?SUN:0xffffff,x+w/2,y+0.05+h*0.6,16.4,false);x+=w+0.05;}
+      k++;}
+  }
+  // tote bags hanging on the side
+  for(let i=0;i<3;i++){box(scene,0.06,0.5,0.4,[0xf4f1ea,SKY,SUN][i],19.1,0.9+i*0.02,15.9+i*0.03,false);}
+})();
+// a stack of blue crates, like the workshop floor
+blockRect(20,10);
+for(let i=0;i<3;i++)box(scene,0.8,0.32,0.6,0x2a6fd1,20.5,i*0.33,10.5);
+
+/* Café bar with a blue tile backsplash. */
 blockRect(23,0,6,1);
-box(scene,6,0.92,0.8,0x2f2c38,26,0,0.42);
-box(scene,6.04,0.06,0.84,0xe9e5dd,26,0.92,0.42);
+(function(){
+  const tex=tileTex(1);tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.repeat.set(12,3);
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(6,1.5),new THREE.MeshLambertMaterial({map:tex}));m.position.set(26,1.75,0.02);wallBack.add(m);
+})();
+box(scene,6,0.92,0.8,0xffffff,26,0,0.42);box(scene,6.04,0.06,0.84,PLY,26,0.92,0.42);box(scene,6,0.12,0.04,NAVY,26,0.06,0.83,false);
 box(scene,0.6,0.62,0.46,ALU,24.2,0.98,0.4);box(scene,0.5,0.1,0.04,0x2d2a3a,24.2,1.38,0.64,false);
 box(scene,0.14,0.12,0.14,0xfff8ea,24.2,0.98,0.56);
 box(scene,0.24,0.5,0.24,0x2d2a3a,25.1,0.98,0.36);
-for(let i=0;i<4;i++)box(scene,0.12,0.14,0.12,[0xf3b443,0x7fd38c,0xe2725b,0x8db4ff][i],26.2+i*0.3,0.98,0.4);
-box(scene,0.9,0.42,0.42,0xcfd2d6,27.9,0.98,0.4);
-const menu=pixTex(64,32);
-(function(){const g=menu.g;g.fillStyle='#24222c';g.fillRect(0,0,64,32);g.fillStyle='#f3c98b';g.fillRect(4,4,24,3);
-  g.fillStyle='#efe8d8';for(let r=0;r<4;r++){g.fillRect(4,11+r*5,30-(r*7)%12,2);g.fillRect(48,11+r*5,10,2);}menu.t.needsUpdate=true;})();
-box(wallBack,3.2,1.5,0.05,0x6e4a30,26,1.55,0.03,false);
-screenPlane(wallBack,3.0,1.35,menu.t,26,2.3,0.07);
+for(let i=0;i<4;i++)box(scene,0.12,0.14,0.12,[SUN,MINT,CORAL,SKY][i],26.2+i*0.3,0.98,0.4);
+box(scene,0.9,0.42,0.42,PINK,27.9,0.98,0.4);
 blockRect(29,0,1,2);
-box(scene,0.9,2.1,0.85,0xe9ecef,29.5,0,0.95);
-box(scene,0.06,0.6,0.04,0x8d8a96,29.03,1.2,1.2,false);
+box(scene,0.9,2.1,0.85,SKY2,29.5,0,0.95);box(scene,0.06,0.6,0.04,0xffffff,29.03,1.2,1.2,false);
 blockRect(25,3,2,1);
-box(scene,1.8,0.06,0.7,0xe9e5dd,26,1.0,3.5);
+box(scene,1.8,0.06,0.7,0xffffff,26,1.0,3.5);
 box(scene,0.08,1.0,0.08,FRAME,25.3,0,3.5);box(scene,0.08,1.0,0.08,FRAME,26.7,0,3.5);
-for(const sx of[25.3,26.7]){box(scene,0.36,0.05,0.36,0xd8342f,sx,0.72,4.3);box(scene,0.05,0.72,0.05,FRAME,sx,0,4.3);}
+for(const sx of[25.3,26.7]){box(scene,0.36,0.05,0.36,SUN,sx,0.72,4.3);box(scene,0.05,0.72,0.05,FRAME,sx,0,4.3);}
 
-/* Lounge: a big L sofa, bean bags, coffee table and a floor lamp. */
-blockRect(23,9,5,1);blockRect(22,9,1,3);
-box(scene,5,0.38,0.9,0x4d5a8c,25.5,0,9.5);
-box(scene,5,0.5,0.25,0x404c7a,25.5,0.3,9.12);
-box(scene,0.9,0.38,3,0x4d5a8c,22.5,0,10.5);
-box(scene,0.25,0.5,3,0x404c7a,22.12,0.3,10.5);
-for(const[cx,c]of[[24,0xf3b443],[25.6,0xe2725b],[27.2,0x7fd38c]])box(scene,0.55,0.3,0.14,c,cx,0.38,9.3);
-blockRect(24,11,3,1);
-box(scene,2.6,0.34,0.9,WOOD,25.5,0,11.5);
-box(scene,0.4,0.03,0.3,0xefe8d8,25.0,0.34,11.45);box(scene,0.12,0.14,0.12,0xfff8ea,26.1,0.34,11.5);
-const beanCols=[0xd8342f,0x3f7fd8];
-[[24.5,13.6],[27.5,13.6]].forEach(([bx,bz],i)=>{blockRect(Math.floor(bx),Math.floor(bz));box(scene,0.8,0.3,0.8,beanCols[i],bx,0,bz);box(scene,0.62,0.22,0.62,beanCols[i],bx,0.3,bz-0.04);});
-blockRect(29,9);
-box(scene,0.3,0.04,0.3,DARK,29.5,0,9.5);box(scene,0.05,1.7,0.05,DARK,29.5,0,9.5);
-box(scene,0.45,0.3,0.45,new THREE.MeshLambertMaterial({color:0xffe3a3,emissive:0x6b4a10}),29.5,1.65,9.5);
-const lamp=new THREE.PointLight(0xffc870,0.5,5);lamp.position.set(29.3,1.6,9.8);scene.add(lamp);
-
-/* Game corner: ping pong table and an arcade cabinet. */
-blockRect(23,16,4,2);
-box(scene,3.6,0.06,1.8,0x2f7d5b,25,0.72,17);
-box(scene,3.62,0.02,0.04,0xf4f1ea,25,0.78,17);
-box(scene,0.04,0.16,1.84,0xf4f1ea,25,0.78,17);
-for(const[lx,lz]of[[23.4,16.3],[26.6,16.3],[23.4,17.7],[26.6,17.7]])box(scene,0.07,0.72,0.07,FRAME,lx,0,lz);
-blockRect(29,16);
+/* Lounge: sky blue sofas, bean bags, a round rug. */
+rug(26,10.5,7,5,0xfde3a6,SUN);
+blockRect(23,8,5,1);blockRect(22,8,1,3);
+box(scene,5,0.38,0.9,SKY,25.5,0,8.5);box(scene,5,0.5,0.25,0x2f8fd0,25.5,0.3,8.12);
+box(scene,0.9,0.38,3,SKY,22.5,0,9.5);box(scene,0.25,0.5,3,0x2f8fd0,22.12,0.3,9.5);
+for(const[cx,c]of[[24,SUN],[25.6,CORAL],[27.2,0xffffff]])box(scene,0.55,0.3,0.14,c,cx,0.38,8.3);
+blockRect(24,10,3,1);
+box(scene,2.6,0.34,0.9,WOOD,25.5,0,10.5);
+box(scene,0.4,0.03,0.3,0xffffff,25.0,0.34,10.45);box(scene,0.12,0.14,0.12,CORAL,26.1,0.34,10.5);
+const beanCols=[CORAL,MINT];
+[[24.5,12.6],[27.5,12.6]].forEach(([bx,bz],i)=>{blockRect(Math.floor(bx),Math.floor(bz));box(scene,0.8,0.3,0.8,beanCols[i],bx,0,bz);box(scene,0.62,0.22,0.62,beanCols[i],bx,0.3,bz-0.04);});
+blockRect(29,8);
+box(scene,0.3,0.04,0.3,DARK,29.5,0,8.5);box(scene,0.05,1.7,0.05,DARK,29.5,0,8.5);
+box(scene,0.45,0.3,0.45,new THREE.MeshLambertMaterial({color:0xffe3a3,emissive:0x6b4a10}),29.5,1.65,8.5);
+const lamp=new THREE.PointLight(0xffc870,0.45,5);lamp.position.set(29.3,1.6,8.8);scene.add(lamp);
+// arcade, for the breaks
+blockRect(29,12);
 const arcade=pixTex(24,20);
-box(scene,0.8,1.6,0.8,0x3b2f6b,29.5,0,16.5);
-box(scene,0.84,0.18,0.84,0xd65a4a,29.5,1.6,16.5);
-box(scene,0.3,0.12,0.72,0x231c45,29.0,0.8,16.5);
-screenPlane(scene,0.62,0.5,arcade.t,29.09,1.22,16.5,-PI/2);
-const arcadeLight=new THREE.PointLight(0xb07ad9,0.4,2.5);arcadeLight.position.set(28.7,1.2,16.5);scene.add(arcadeLight);
+box(scene,0.8,1.6,0.8,NAVY,29.5,0,12.5);
+box(scene,0.84,0.18,0.84,SUN,29.5,1.6,12.5);
+box(scene,0.3,0.12,0.72,0x1d2f5c,29.0,0.8,12.5);
+screenPlane(scene,0.62,0.5,arcade.t,29.09,1.22,12.5,-PI/2);
+const arcadeLight=new THREE.PointLight(0x8fd0f5,0.4,2.5);arcadeLight.position.set(28.7,1.2,12.5);scene.add(arcadeLight);
 
-/* Huddle corner by the windows: round table, stools, a whiteboard and a bookshelf. */
-blockRect(3,16,2,2);
-box(scene,1.5,0.06,1.5,0xe9e5dd,4,0.74,17);box(scene,0.12,0.74,0.12,FRAME,4,0,17);
-for(const[sx,sz]of[[2.6,17],[5.4,17],[4,15.6],[4,18.4]]){box(scene,0.36,0.05,0.36,0x3f7fd8,sx,0.46,sz);box(scene,0.05,0.46,0.05,FRAME,sx,0,sz);}
-box(wallLeft,0.04,1.3,2.8,0x8a8f96,0.02,0.85,17,false);
-box(wallLeft,0.05,1.18,2.68,0xf4f6f2,0.04,0.91,17,false);
-[[0x3d6fd6,1.75,16.3,1.1],[0x3d6fd6,1.6,16.3,0.8],[0xd65a4a,1.75,17.7,0.9],[0x3f9b52,1.4,17.6,0.6],[0x2d2a3a,1.25,16.9,1.6]]
-  .forEach(([c,y,z,w])=>box(wallLeft,0.02,0.05,w,c,0.08,y,z,false));
-blockRect(12,16,4,1);
+/* Photo corner: a sky blue paper backdrop, softboxes, a camera on a tripod, a hamper on the pedestal. */
 (function(){
-  box(scene,4,1.6,0.5,WOOD,14,0,16.27);
-  const cols=[0xd65a4a,0x3d6fd6,0xf3b443,0x3f9b52,0xefe8d8,0x8e5fb5,0x2d2a3a];
-  for(const y of[0.08,0.6,1.12]){
-    box(scene,3.96,0.04,0.52,0x6b4a30,14,y,16.29,false);
-    let x=12.1,k=Math.round(y*10);while(x<15.8){const w=0.08+(k%4)*0.02;if(k%7)box(scene,w-0.01,0.3+(k%3)*0.05,0.3,cols[k%7],x+w/2,y+0.04,16.4,false);x+=w;k++;}
-  }
+  blockRect(24,15,4,2);
+  box(scene,4.2,1.9,0.06,SKY,26,0,15.2);
+  box(scene,4.2,0.04,1.6,SKY,26,0,16.0,false);
+  box(scene,4.4,0.08,0.08,FRAME,26,1.9,15.2);
+  for(const lx of[23.8,28.2])box(scene,0.05,1.9,0.05,FRAME,lx,0,15.2);
+  box(scene,0.6,0.5,0.6,0xffffff,26,0,16.2);
+  box(scene,0.5,0.3,0.42,NAVY,26,0.5,16.2);box(scene,0.52,0.06,0.44,SUN,26,0.68,16.2);
+  for(const[lx,lz]of[[23.6,17.4],[28.4,17.4]]){blockRect(Math.floor(lx),Math.floor(lz));box(scene,0.05,1.5,0.05,FRAME,lx,0,lz);box(scene,0.6,0.5,0.2,0xffffff,lx,1.5,lz-0.1);box(scene,0.62,0.52,0.06,0x2d2a3a,lx,1.49,lz);}
+  blockRect(26,18);
+  box(scene,0.04,1.2,0.04,FRAME,26,0,18.5);box(scene,0.3,0.2,0.18,0x2d2a3a,26,1.2,18.5);box(scene,0.1,0.1,0.1,0x111015,26,1.25,18.38);
+  const soft=new THREE.PointLight(0xffffff,0.35,4);soft.position.set(26,1.6,17.2);scene.add(soft);
 })();
+
+/* Huddle corner: round table and a whiteboard. */
+blockRect(3,16,2,2);
+box(scene,1.5,0.06,1.5,0xffffff,4,0.74,17);box(scene,0.12,0.74,0.12,FRAME,4,0,17);
+for(const[sx,sz,c]of[[2.5,17,SUN],[5.5,17,CORAL],[4,15.5,SKY],[4,18.5,MINT]]){box(scene,0.36,0.05,0.36,c,sx,0.46,sz);box(scene,0.05,0.46,0.05,FRAME,sx,0,sz);}
+box(wallLeft,0.04,1.3,2.8,0x8a8f96,0.02,0.85,16.6,false);
+box(wallLeft,0.05,1.18,2.68,0xf4f6f2,0.04,0.91,16.6,false);
+[[NAVY,1.75,15.9,1.1],[SKY,1.6,15.9,0.8],[CORAL,1.75,17.3,0.9],[MINT,1.4,17.2,0.6],[0x2d2a3a,1.25,16.5,1.6]]
+  .forEach(([c,y,z,w])=>box(wallLeft,0.02,0.05,w,c,0.08,y,z,false));
 blockRect(1,19);
 box(scene,0.5,0.9,0.5,0xe8e6e0,1.5,0,19.5);
 box(scene,0.36,0.45,0.36,new THREE.MeshLambertMaterial({color:0x8fc7f0,transparent:true,opacity:0.85}),1.5,0.9,19.5);
 // doormat at the front, where new agents walk in
-box(scene,1.8,0.03,0.8,0x8e3f36,18,0,19.55,false);
-const DOOR=[18,19];
+box(scene,1.8,0.03,0.8,NAVY,20,0,19.55,false);
+const DOOR=[20,19];
 
 const POIS=[
   {cell:[24,1],rot:PI,text:'bikin kopi',place:'café',anim:'drink'},
   {cell:[27,1],rot:PI,text:'ambil camilan',place:'café',anim:'stand'},
-  {cell:[28,2],rot:PI/2,text:'cari minuman dingin',place:'kulkas',anim:'stand'},
+  {cell:[28,2],rot:PI/2,text:'ambil minuman dingin',place:'kulkas',anim:'stand'},
   {cell:[25,4],seat:[25.3,4.3],seatH:0.72,rot:PI,text:'ngobrol santai',place:'meja bar',anim:'drink'},
   {cell:[26,4],seat:[26.7,4.3],seatH:0.72,rot:PI,text:'ngemil',place:'meja bar',anim:'stand'},
-  {cell:[1,4],rot:-PI/2,text:'lihat pemandangan',place:'jendela',anim:'look'},
-  {cell:[1,9],rot:-PI/2,text:'ngelamun',place:'jendela',anim:'look'},
-  {cell:[1,13],rot:-PI/2,text:'telepon klien',place:'jendela',anim:'phone'},
-  {cell:[11,2],rot:PI,text:'foto di plang Dapu',place:'plang',anim:'look'},
-  {cell:[3,2],rot:PI,text:'lihat wall of fame',place:'dinding',anim:'look'},
-  {cell:[1,17],rot:-PI/2,text:'corat-coret ide',place:'whiteboard',anim:'write'},
-  {cell:[14,15],rot:0,text:'cari buku',place:'rak buku',anim:'look'},
+  {cell:[1,3],rot:-PI/2,text:'lihat pemandangan',place:'jendela',anim:'look'},
+  {cell:[1,7],rot:-PI/2,text:'telepon klien',place:'jendela',anim:'phone'},
+  {cell:[1,12],rot:-PI/2,text:'cari inspirasi',place:'mood board',anim:'look'},
+  {cell:[16,2],rot:PI,text:'foto di logo Dapu',place:'dinding logo',anim:'look'},
+  {cell:[4,1],rot:PI,text:'ambil alat',place:'pegboard',anim:'write'},
+  {cell:[1,16],rot:-PI/2,text:'corat-coret ide',place:'whiteboard',anim:'write'},
   {cell:[2,19],rot:-PI/2,text:'isi botol minum',place:'dispenser',anim:'drink'},
-  {cell:[24,10],seat:[24.5,9.6],seatH:0.38,rot:0,text:'rebahan bentar',place:'sofa',anim:'lounge'},
-  {cell:[26,10],seat:[26.5,9.6],seatH:0.38,rot:0,text:'scroll HP',place:'sofa',anim:'phone'},
-  {cell:[23,11],seat:[22.55,11.5],seatH:0.38,rot:PI/2,text:'baca berita',place:'sofa',anim:'phone'},
-  {cell:[24,14],seat:[24.5,13.6],seatH:0.5,rot:PI,text:'tiduran di bean bag',place:'bean bag',anim:'lounge'},
-  {cell:[27,14],seat:[27.5,13.6],seatH:0.5,rot:PI,text:'main HP',place:'bean bag',anim:'phone'},
-  {cell:[22,17],rot:PI/2,text:'main pingpong',place:'meja pingpong',anim:'play'},
-  {cell:[27,17],rot:-PI/2,text:'main pingpong',place:'meja pingpong',anim:'play'},
-  {cell:[28,16],rot:PI/2,text:'main game',place:'arcade',anim:'play'},
+  {cell:[15,4],seat:[15,4.3],seatH:0.6,rot:0,text:'gambar ilustrasi',place:'meja craft',anim:'write'},
+  {cell:[16,4],seat:[16.5,4.3],seatH:0.6,rot:0,text:'rakit hampers',place:'meja craft',anim:'write'},
+  {cell:[18,7],seat:[18,7.7],seatH:0.6,rot:PI,text:'potong kain',place:'meja craft',anim:'write'},
+  {cell:[15,10],rot:PI,text:'cetak di UV printer',place:'UV printer',anim:'stand'},
+  {cell:[18,11],seat:[18,10.4],seatH:0.46,rot:PI,text:'jahit tote bag',place:'meja jahit',anim:'write'},
+  {cell:[15,15],rot:0,text:'rapihin hampers',place:'rak hampers',anim:'look'},
+  {cell:[24,9],seat:[24.5,8.6],seatH:0.38,rot:0,text:'rebahan bentar',place:'sofa',anim:'lounge'},
+  {cell:[26,9],seat:[26.5,8.6],seatH:0.38,rot:0,text:'scroll HP',place:'sofa',anim:'phone'},
+  {cell:[23,10],seat:[22.55,10.5],seatH:0.38,rot:PI/2,text:'baca berita',place:'sofa',anim:'phone'},
+  {cell:[24,13],seat:[24.5,12.6],seatH:0.5,rot:PI,text:'tiduran di bean bag',place:'bean bag',anim:'lounge'},
+  {cell:[27,13],seat:[27.5,12.6],seatH:0.5,rot:PI,text:'main HP',place:'bean bag',anim:'phone'},
+  {cell:[28,12],rot:PI/2,text:'main game',place:'arcade',anim:'play'},
+  {cell:[26,17],rot:PI,text:'foto produk',place:'pojok foto',anim:'phone'},
+  {cell:[25,18],rot:PI,text:'atur lighting',place:'pojok foto',anim:'look'},
   {cell:[2,17],seat:[2.5,17],seatH:0.46,rot:PI/2,text:'meeting kecil',place:'meja diskusi',anim:'stand'},
   {cell:[6,17],seat:[5.5,17],seatH:0.46,rot:-PI/2,text:'brainstorm',place:'meja diskusi',anim:'write'},
-  {cell:[20,14],rot:PI/2,text:'nyiram tanaman',place:'tanaman',anim:'stand'},
+  {cell:[20,9],rot:0,text:'cek stok krat',place:'gudang mini',anim:'look'},
 ];
 
 /* ---------- characters ---------- */
@@ -676,7 +752,7 @@ class Agent{
     if(!this.desk||this.leaving||!this.task)return;
     this.releasePoi();this.stroll=false;
     const d=this.desk,t=this.task;
-    this.leaveSeat(()=>this.goTo(d.approach,()=>this.sitAt(d.seat,PI,d.approach,d.seatH,()=>{
+    this.leaveSeat(()=>this.goTo(d.approach,()=>this.sitAt(d.seat,d.rot,d.approach,d.seatH,()=>{
       if(this.task===t){this.state='working';this.mode='type';}
     })));
   }
