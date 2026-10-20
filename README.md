@@ -22,6 +22,15 @@ Kalau relay dipakai, nama dan daftar yang dipulangkan disimpan di relay, jadi sa
 
 Baju karyawan ikut jenis kerjaannya. Tugas kreatif (desain, konten, caption, skrip, video, Canva, artikel) bikin bajunya merah. Selain itu, begitu dia pakai tool apa pun (Bash, Edit, cari di web, dan lain-lain) atau tugasnya teknis (kode, bug, plugin, server), dia tinggal pakai kolor. Jenisnya ditebak dari teks tugas dan tool yang dipakai. Yang belum pakai tool apa-apa tetap pakai baju biasa.
 
+### Aplikasi di iPhone dan Mac
+
+Kantor 3D juga ada online di https://yihao2000.github.io/kantor-agent/ (folder `docs/`, dibuat ulang oleh `node scripts/build-page.mjs`). Buka di Safari, lalu:
+
+- **iPhone:** Share, Add to Home Screen.
+- **Mac:** File, Add to Dock.
+
+Pertama kali dibuka, tempel alamat relay-mu (yang ada `?key=`). Alamatnya cuma disimpan di perangkat itu, nggak pernah ada di halaman online. Geser untuk putar, cubit dua jari untuk zoom.
+
 ### Jadi wallpaper live di Mac
 
 Ketik `/kantor-wallpaper` di Claude Code. Plugin menyiapkan folder `~/.claude/kantor-agent/wallpaper/`: kantornya saja, layar penuh, kamera berputar pelan, dan digambar 30 fps supaya hemat baterai. Pasang [Plash](https://sindresorhus.com/plash) (gratis), tambahkan website lokal, lalu pilih folder itu (di jendela pilih folder, tekan Cmd+Shift+G dan tempel alamatnya, karena `.claude` folder tersembunyi). Di halaman biasa, tombol ⛶ atau tombol W juga mengganti ke mode wallpaper.

@@ -2,7 +2,15 @@
 <html lang="id">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1b1a24">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kantor Agent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
 <title>Kantor Agent 3D</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,6 +35,7 @@ button{font:inherit;color:inherit}
 .stage{position:relative;height:calc(100vh - 32px);min-height:380px;background:var(--stage);border:2px solid var(--line);border-radius:4px;overflow:hidden;touch-action:none;cursor:grab}
 .stage:active{cursor:grabbing}
 @media (max-width:900px){.stage{height:64vh}}
+@media (max-width:600px){.hint{display:none}.ctrl button{width:40px;height:40px}}
 #scene{display:block;width:100%;height:100%}
 .labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .labels .name{pointer-events:auto;cursor:pointer}
@@ -86,6 +95,12 @@ button.row:hover{background:var(--raise)}
 button.row.sel{background:var(--raise);outline:2px solid var(--accent)}
 .editor{display:flex;flex-direction:column;gap:10px;border-color:var(--accent)}
 .editor[hidden]{display:none}
+.connect{display:flex;flex-direction:column;gap:10px;border-color:var(--accent)}
+.connect[hidden]{display:none}
+.connect h2{margin:0}
+.connect input{width:100%;font:inherit;color:var(--fg);background:var(--raise);border:2px solid var(--line);border-radius:3px;padding:7px 9px}
+.connect .err{color:var(--off);font-size:13px;margin:0}
+@supports(padding:max(0px)){body{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right));padding-bottom:max(16px,env(safe-area-inset-bottom))}}
 .editor h2{margin:0}
 .ed-who{display:grid;grid-template-columns:14px minmax(0,1fr);gap:10px;align-items:center}
 .ed-who b{display:block;font-size:15px}
@@ -125,6 +140,14 @@ button.row.sel{background:var(--raise);outline:2px solid var(--accent)}
         <div class="s"><b id="nSantai">0</b><span>Santai</span></div>
         <div class="d"><b id="nBeres">0</b><span>Beres</span></div>
       </div>
+    </div>
+    <div class="card connect" id="connect" hidden>
+      <h2>Sambungkan kantor</h2>
+      <p class="note">Tempel alamat relay kamu (yang ada <code>?key=</code>-nya). Alamatnya cuma disimpan di perangkat ini.</p>
+      <label for="relayInput" class="note">Alamat relay</label>
+      <input type="password" id="relayInput" autocomplete="off" placeholder="https://….web.val.run/?key=…">
+      <div class="ed-row"><button type="button" class="btn primary" id="relaySave">Sambungkan</button></div>
+      <p class="err" id="relayErr" hidden></p>
     </div>
     <div class="card editor" id="editor" hidden>
       <h2>Karyawan</h2>
@@ -659,6 +682,20 @@ async function pollRelay(){
   }catch(e){}
 }
 setInterval(pollRelay,3000);pollRelay();
+/* On the web copy (iPhone, Dock app) there is no local roster: ask once for the relay and keep it on this device. */
+function showConnect(){$('#connect').hidden=!!relayUrl||!!localData;}
+setTimeout(showConnect,2500);
+$('#relaySave').addEventListener('click',async()=>{
+  const url=$('#relayInput').value.trim(),err=$('#relayErr');err.hidden=true;
+  if(!/^https:\/\/\S+\?key=\S+$/.test(url)){err.textContent='Alamatnya harus diawali https:// dan ada ?key= di belakangnya.';err.hidden=false;return;}
+  try{
+    const r=await fetch(url,{cache:'no-store'});
+    if(!r.ok)throw new Error(r.status===401?'Kuncinya salah.':'Relay jawab '+r.status+'.');
+    relayUrl=url;try{localStorage.setItem('kantor-relay',url);}catch(e){}
+    $('#relayInput').value='';showConnect();pollRelay();
+  }catch(e){err.textContent=e.message&&e.message.length<60?e.message:'Relay nggak bisa dihubungi. Cek alamatnya.';err.hidden=false;}
+});
+$('#relayInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('#relaySave').click();});
 function liveSessions(){
   const out=new Map();
   if(localData&&Date.now()-localData.at<ALIVE_MS)for(const s of localData.sessions)if(Date.now()-s.at<ALIVE_MS)out.set(s.sid,s);
@@ -829,7 +866,13 @@ let drag=null;
 let downAt=null;
 canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX};downAt={x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId);});
 canvas.addEventListener('pointerup',e=>{if(downAt&&Math.hypot(e.clientX-downAt.x,e.clientY-downAt.y)<5)pickAt(e.clientX,e.clientY);downAt=null;});
-canvas.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x;drag.x=e.clientX;camTarget-=dx*0.008;camAngle=camTarget;});
+/* Two fingers pinch to zoom (iPhone, trackpad-less screens). */
+const touches=new Map();let pinchFrom=0,pinchZoom=1;
+canvas.addEventListener('pointerdown',e=>{touches.set(e.pointerId,{x:e.clientX,y:e.clientY});if(touches.size===2){const[a,b]=[...touches.values()];pinchFrom=Math.hypot(a.x-b.x,a.y-b.y);pinchZoom=zoomTarget;downAt=null;}});
+canvas.addEventListener('pointermove',e=>{if(!touches.has(e.pointerId))return;touches.set(e.pointerId,{x:e.clientX,y:e.clientY});if(touches.size===2&&pinchFrom){const[a,b]=[...touches.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);zoomTarget=Math.min(1.5,Math.max(0.5,pinchZoom*pinchFrom/Math.max(1,d)));}});
+const dropTouch=e=>{touches.delete(e.pointerId);if(touches.size<2)pinchFrom=0;};
+canvas.addEventListener('pointerup',dropTouch);canvas.addEventListener('pointercancel',dropTouch);
+canvas.addEventListener('pointermove',e=>{if(!drag||touches.size>1)return;const dx=e.clientX-drag.x;drag.x=e.clientX;camTarget-=dx*0.008;camAngle=camTarget;});
 const endDrag=()=>{drag=null;};
 canvas.addEventListener('pointerup',endDrag);canvas.addEventListener('pointercancel',endDrag);
 stage.addEventListener('wheel',e=>{e.preventDefault();zoomTarget=Math.min(1.5,Math.max(0.5,zoomTarget*(e.deltaY>0?1.08:0.92)));},{passive:false});
