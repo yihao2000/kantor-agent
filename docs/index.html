@@ -131,7 +131,7 @@ button.row.sel{background:var(--raise);outline:2px solid var(--accent)}
     <div class="labels" id="labels"></div>
     <div class="hud"><h1>KANTOR AGENT</h1><span class="clock" id="clock">--:--</span><span class="wallstat" id="wallStat"></span></div>
     <button type="button" class="wallexit" id="wallExit">Keluar mode wallpaper (W)</button>
-    <div class="empty" id="empty"><b>Kantor masih sepi</b>Buka Claude Code di Terminal atau di aplikasi Claude dengan environment lokal. Karyawannya masuk sendiri begitu sesinya jalan.</div>
+    <div class="empty" id="empty"><b>Kantor masih sepi</b>Karyawan masuk sendiri begitu ada sesi Claude yang jalan.</div>
     <div class="hint">Geser untuk putar, scroll untuk zoom</div>
     <div class="ctrl">
       <button type="button" id="rotL" aria-label="Putar kamera ke kiri">&#x21BA;</button>
@@ -196,9 +196,9 @@ const sun=new THREE.DirectionalLight(0xfff0d6,0.7);
 sun.position.set(CENTER.x-8,24,CENTER.z+12);
 sun.target.position.copy(CENTER);
 sun.castShadow=true;
-sun.shadow.mapSize.set(2048,2048);
+sun.shadow.mapSize.set(window.innerWidth>900?4096:2048,window.innerWidth>900?4096:2048);
 Object.assign(sun.shadow.camera,{left:-21,right:21,top:21,bottom:-21,near:1,far:70});
-sun.shadow.bias=-0.002;
+sun.shadow.bias=-0.0006;sun.shadow.normalBias=0.035;
 scene.add(sun,sun.target);
 
 /* ---------- helpers ---------- */
@@ -427,23 +427,23 @@ plant(0,0,true,NAVY);plant(11,0,true,SUN);plant(21,0,true,SKY);plant(0,8);plant(
 blockRect(14,5,5,2);
 box(scene,5,0.08,1.8,PLY,16.5,0.82,6);
 for(const[lx,lz]of[[14.15,5.2],[18.85,5.2],[14.15,6.8],[18.85,6.8]])box(scene,0.1,0.82,0.1,WOOD,lx,0,lz);
-box(scene,4.8,0.04,1.6,0x7fbf8a,16.5,0.86,6,false);                              // cutting mat
-[[14.8,5.6,0.6,0.25,0.45,SKY],[15.5,5.55,0.45,0.3,0.4,0xffffff],[18.2,6.4,0.7,0.18,0.5,NAVY]].forEach(([x,z,w,h,d,c])=>box(scene,w,h,d,c,x,0.9,z));
-box(scene,0.5,0.02,0.36,0xffffff,16.3,0.9,6.3);box(scene,0.4,0.022,0.28,CORAL,16.3,0.9,6.3);    // illustration prints
-box(scene,0.5,0.02,0.36,0xffffff,17.1,0.9,5.7);box(scene,0.4,0.022,0.28,SUN,17.1,0.9,5.7);
-box(scene,0.18,0.18,1.0,PINK,17.4,0.9,6.55);box(scene,0.18,0.18,1.0,SKY2,17.65,0.9,6.55);       // fabric rolls
+box(scene,4.8,0.02,1.6,0x7fbf8a,16.5,0.905,6,false);                              // cutting mat
+[[14.8,5.6,0.6,0.25,0.45,SKY],[15.5,5.55,0.45,0.3,0.4,0xffffff],[18.2,6.4,0.7,0.18,0.5,NAVY]].forEach(([x,z,w,h,d,c])=>box(scene,w,h,d,c,x,0.93,z));
+box(scene,0.5,0.015,0.36,0xffffff,16.3,0.93,6.3);box(scene,0.4,0.01,0.28,CORAL,16.3,0.945,6.3);    // illustration prints
+box(scene,0.5,0.015,0.36,0xffffff,17.1,0.93,5.7);box(scene,0.4,0.01,0.28,SUN,17.1,0.945,5.7);
+box(scene,0.18,0.18,1.0,PINK,17.4,0.93,6.55);box(scene,0.18,0.18,1.0,SKY2,17.65,0.93,6.55);       // fabric rolls
 for(const sx of[15,16.5,18])for(const sz of[4.3,7.7])box(scene,0.36,0.05,0.36,[SUN,SKY,CORAL][Math.round(sx)%3],sx,0.6,sz),box(scene,0.05,0.6,0.05,FRAME,sx,0,sz);
 // UV printer
 blockRect(14,9,2,1);
 box(scene,1.8,0.8,0.9,0xe9ecef,15,0,9.5);box(scene,1.5,0.08,0.7,0x2d2a3a,15,0.8,9.5);
 box(scene,1.9,0.22,0.3,0x3a3846,15,0.88,9.2);box(scene,0.2,0.08,0.06,SKY,14.3,1.1,9.3,false);
-for(let i=0;i<3;i++)box(scene,0.3,0.02,0.2,[SUN,CORAL,MINT][i],14.6+i*0.4,0.88,9.7);
+for(let i=0;i<3;i++)box(scene,0.3,0.015,0.2,[SUN,CORAL,MINT][i],14.6+i*0.4,0.885,9.68);
 // sewing station
 blockRect(17,9,2,1);
 box(scene,1.8,0.06,0.8,PLY,18,0.72,9.5);
 for(const lx of[17.15,18.85])box(scene,0.06,0.72,0.7,WOOD,lx,0,9.5);
 box(scene,0.6,0.3,0.24,0xf4f1ea,18,0.78,9.45);box(scene,0.14,0.2,0.24,0xf4f1ea,17.75,1.08,9.45);box(scene,0.5,0.08,0.2,0xf4f1ea,18,1.22,9.45);
-box(scene,0.6,0.02,0.4,CORAL,18.5,0.78,9.6);
+box(scene,0.5,0.015,0.4,CORAL,18.6,0.785,9.6);
 box(scene,0.36,0.05,0.36,NAVY,18,0.46,10.4);box(scene,0.05,0.46,0.05,FRAME,18,0,10.4);
 
 /* Hampers shelf: open shelving full of colorful gift boxes, totes and tumblers. */
