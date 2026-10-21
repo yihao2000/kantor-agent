@@ -131,7 +131,7 @@ button.row.sel{background:var(--raise);outline:2px solid var(--accent)}
   <section class="stage" id="stage" aria-label="Kantor 3D tempat sesi Claude bekerja">
     <canvas id="scene"></canvas>
     <div class="labels" id="labels"></div>
-    <div class="hud"><h1>KANTOR AGENT</h1><span class="clock" id="clock">--:--</span><span class="ver">v0.9.7</span><span class="wallstat" id="wallStat"></span></div>
+    <div class="hud"><h1>KANTOR AGENT</h1><span class="clock" id="clock">--:--</span><span class="ver">v0.9.8</span><span class="wallstat" id="wallStat"></span></div>
     <button type="button" class="wallexit" id="wallExit">Keluar mode wallpaper (W)</button>
     <div class="empty" id="empty"><b>Kantor masih sepi</b>Karyawan masuk sendiri begitu ada sesi Claude yang jalan.</div>
     <div class="hint">Geser (atau 2 jari di trackpad) untuk pindah · Shift + geser untuk putar · cubit untuk zoom · klik 2x untuk ke tengah</div>
@@ -542,72 +542,52 @@ box(scene,0.36,0.45,0.36,new THREE.MeshLambertMaterial({color:0x8fc7f0,transpare
 // doormat at the front, where new agents walk in
 box(scene,1.8,0.03,0.8,NAVY,20,0,19.55,false);
 
-/* The founder as a cute chibi statue: Andrew in his tan shirt and black apron, waving with one hand and holding a hamper in the other,
-   bouncing on top of a giant gift box by the entrance. Click him and he cheers the team on. */
+/* The founder as a voxel statue: Andrew with neat side-parted hair, square glasses, tan shirt and black apron,
+   waving with one hand and holding a hamper in the other, on top of a giant gift box by the entrance. Click him and he cheers the team on. */
 const STATUE=(function(){
   blockRect(9,16,2,2);
   const base=new THREE.Group();base.position.set(10,0,17);base.rotation.y=PI/4;scene.add(base);
-  // the pedestal is a gift box: sky blue with a white ribbon round it and a big bow at the back
-  box(base,1.7,0.62,1.7,SKY,0,0,0);
-  box(base,1.72,0.64,0.24,0xffffff,0,0,0);                      // ribbon across the sides
-  box(base,0.24,0.025,1.72,0xffffff,0,0.62,0,false);             // ribbon over the top
-  box(base,0.34,0.22,0.12,0xffffff,-0.2,0.62,-0.62);box(base,0.34,0.22,0.12,0xffffff,0.2,0.62,-0.62);box(base,0.14,0.14,0.14,SUN,0,0.64,-0.62);
+  const SKIN=0xf6d5b8,HAIR=0x231c18,SHIRT=0xd8b07f,APRON=0x2a2830,STRAP=0xb47b4c,PANTS=0x34313b,SHOE=0xf7f4ee,PINK_=0xf7a6bf,FRAME=0x2b211b,EYE=0x1d1a22,MOUTH=0x8a3a33;
+  // the pedestal is a gift box: sky blue with a white ribbon round it
+  box(base,1.6,0.55,1.6,SKY,0,0,0);box(base,1.62,0.57,0.22,0xffffff,0,0,0);box(base,0.22,0.02,1.62,0xffffff,0,0.55,0,false);
   // name label, flat on the front face of the box
-  const pc=document.createElement('canvas');pc.width=512;pc.height=176;const pg=pc.getContext('2d');
-  pg.fillStyle='#2c4a8c';pg.beginPath();pg.roundRect?pg.roundRect(6,6,500,164,40):pg.rect(6,6,500,164);pg.fill();
-  pg.fillStyle='#ffffff';pg.textAlign='center';pg.font='800 70px Poppins,"Helvetica Neue",Arial,sans-serif';pg.fillText('Andrew',256,92);
-  pg.fillStyle='#f6c14f';pg.font='700 32px Poppins,"Helvetica Neue",Arial,sans-serif';pg.fillText('★ founder dapu ★',256,140);
-  const lt=new THREE.CanvasTexture(pc);lt.anisotropy=4;
-  const label=new THREE.Mesh(new THREE.PlaneGeometry(1.15,0.4),new THREE.MeshBasicMaterial({map:lt,transparent:true}));
-  label.position.set(0,0.32,0.862);base.add(label);
-  if(document.fonts&&document.fonts.load)document.fonts.load('800 70px Poppins').then(()=>{pg.clearRect(0,0,512,176);pg.fillStyle='#2c4a8c';pg.beginPath();pg.roundRect?pg.roundRect(6,6,500,164,40):pg.rect(6,6,500,164);pg.fill();pg.fillStyle='#ffffff';pg.font='800 70px Poppins,"Helvetica Neue",Arial,sans-serif';pg.fillText('Andrew',256,92);pg.fillStyle='#f6c14f';pg.font='700 32px Poppins,"Helvetica Neue",Arial,sans-serif';pg.fillText('★ founder dapu ★',256,140);lt.needsUpdate=true;}).catch(()=>{});
+  const pc=document.createElement('canvas');pc.width=512;pc.height=164;const pg=pc.getContext('2d');
+  const drawLabel=()=>{pg.clearRect(0,0,512,164);pg.fillStyle='#2c4a8c';pg.fillRect(0,0,512,164);pg.textAlign='center';
+    pg.fillStyle='#ffffff';pg.font='800 69px Poppins,"Helvetica Neue",Arial,sans-serif';pg.fillText('Andrew',256,85);
+    pg.fillStyle='#f6c14f';pg.font='700 33px Poppins,"Helvetica Neue",Arial,sans-serif';pg.fillText('★ founder dapu ★',256,136);};
+  drawLabel();const lt=new THREE.CanvasTexture(pc);lt.anisotropy=4;
+  const label=new THREE.Mesh(new THREE.PlaneGeometry(1.0,0.32),new THREE.MeshBasicMaterial({map:lt}));
+  label.position.set(0,0.28,0.813);base.add(label);
+  if(document.fonts&&document.fonts.load)document.fonts.load('800 69px Poppins').then(()=>{drawLabel();lt.needsUpdate=true;}).catch(()=>{});
 
-  const g=new THREE.Group();g.position.set(0,0.64,0);g.scale.setScalar(2.3);base.add(g);
-  const SKIN=0xf3d2b3,HAIR=0x1d1814,SHIRT=0xd2a979,APRON=0x26242c,STRAP=0xb0784a,PANTS=0x2f2c36,SHOE=0xf4f1ea,PINK=0xf5a3c0;
-  // short legs, white sneakers
-  for(const lx of[-0.08,0.08]){box(g,0.13,0.16,0.15,PANTS,lx,0.04,0);box(g,0.15,0.06,0.2,SHOE,lx,0,0.02);}
-  // small body: tan shirt and the black apron with a tiny dapu patch
-  box(g,0.36,0.3,0.25,SHIRT,0,0.18,0);
-  box(g,0.32,0.24,0.02,APRON,0,0.12,0.13,false);
-  box(g,0.24,0.12,0.02,APRON,0,0.34,0.13,false);
-  box(g,0.04,0.12,0.02,STRAP,-0.09,0.44,0.125,false);box(g,0.04,0.12,0.02,STRAP,0.09,0.44,0.125,false);
-  box(g,0.38,0.03,0.27,STRAP,0,0.3,0,false);
-  const pt=document.createElement('canvas');pt.width=64;pt.height=32;const ptg=pt.getContext('2d');
-  ptg.fillStyle='#fff';ptg.fillRect(0,0,64,32);ptg.fillStyle='#111015';ptg.font='800 22px Poppins,Arial,sans-serif';ptg.textAlign='center';ptg.fillText('dapu',32,23);
-  const patch=new THREE.Mesh(new THREE.PlaneGeometry(0.12,0.06),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(pt)}));
-  patch.position.set(0,0.39,0.142);g.add(patch);
-  // left arm waves hello
-  const armL=new THREE.Group();armL.position.set(-0.2,0.44,0);g.add(armL);
-  box(armL,0.1,0.22,0.12,SHIRT,0,-0.22,0);box(armL,0.09,0.08,0.1,SKIN,0,-0.29,0);
-  // right arm holds a little hamper
-  const armR=new THREE.Group();armR.position.set(0.2,0.44,0);armR.rotation.x=-1.1;armR.rotation.z=0.15;g.add(armR);
-  box(armR,0.1,0.22,0.12,SHIRT,0,-0.22,0);box(armR,0.09,0.08,0.1,SKIN,0,-0.29,0);
-  box(armR,0.2,0.16,0.2,SKY,-0.05,-0.38,0.06);box(armR,0.205,0.165,0.04,0xffffff,-0.05,-0.38,0.06,false);box(armR,0.04,0.165,0.205,0xffffff,-0.05,-0.38,0.06,false);
-  box(armR,0.07,0.05,0.07,SUN,-0.05,-0.22,0.06,false);
-  // a big round head
-  const head=new THREE.Group();head.position.set(0,0.47,0);g.add(head);
-  box(head,0.56,0.5,0.5,SKIN,0,0,0);
-  // fluffy hair: a full top, soft fringe in three locks, volume at the sides and back, and one stray strand standing up
-  box(head,0.62,0.16,0.56,HAIR,0,0.42,-0.01);
-  box(head,0.62,0.4,0.12,HAIR,0,0.12,-0.22);
-  box(head,0.07,0.34,0.52,HAIR,-0.3,0.16,-0.01);box(head,0.07,0.34,0.52,HAIR,0.3,0.16,-0.01);
-  box(head,0.2,0.12,0.06,HAIR,-0.17,0.33,0.24);box(head,0.2,0.1,0.06,HAIR,0.02,0.35,0.24);box(head,0.18,0.12,0.06,HAIR,0.19,0.33,0.24);
-  const ahoge=box(head,0.04,0.14,0.04,HAIR,0.06,0.57,0.02,false);ahoge.rotation.z=-0.5;
-  // big shiny eyes behind round glasses, rosy cheeks, a happy open smile
-  for(const ex of[-0.12,0.12]){
-    box(head,0.08,0.1,0.01,0x1b1a24,ex,0.17,0.252,false);
-    box(head,0.03,0.03,0.012,0xffffff,ex+0.02,0.23,0.256,false);
-    box(head,0.16,0.015,0.01,0x2a2420,ex,0.31,0.26,false);box(head,0.16,0.015,0.01,0x2a2420,ex,0.13,0.26,false);
-    box(head,0.015,0.18,0.01,0x2a2420,ex-0.08,0.13,0.26,false);box(head,0.015,0.18,0.01,0x2a2420,ex+0.08,0.13,0.26,false);
-    box(head,0.1,0.05,0.008,PINK,ex*1.75,0.09,0.252,false);
+  const g=new THREE.Group();g.position.set(0,0.57,0);g.scale.setScalar(2.3);base.add(g);
+  for(const lx of[-0.08,0.08]){box(g,0.13,0.15,0.15,PANTS,lx,0.05,0);box(g,0.15,0.06,0.2,SHOE,lx,0,0.02);}
+  box(g,0.36,0.3,0.24,SHIRT,0,0.2,0);
+  box(g,0.32,0.22,0.02,APRON,0,0.13,0.125,false);box(g,0.22,0.12,0.02,APRON,0,0.35,0.125,false);
+  box(g,0.04,0.12,0.02,STRAP,-0.08,0.42,0.12,false);box(g,0.04,0.12,0.02,STRAP,0.08,0.42,0.12,false);box(g,0.37,0.025,0.25,STRAP,0,0.33,0,false);
+  // left arm waves hello, right arm holds a little hamper
+  const armL=new THREE.Group();armL.position.set(-0.22,0.48,0);g.add(armL);box(armL,0.09,0.22,0.11,SHIRT,0,-0.2,0);box(armL,0.08,0.07,0.09,SKIN,0,-0.27,0);armL.rotation.z=-2.5;
+  const armR=new THREE.Group();armR.position.set(0.22,0.48,0);g.add(armR);box(armR,0.09,0.22,0.11,SHIRT,0,-0.2,0);box(armR,0.08,0.07,0.09,SKIN,0,-0.27,0);armR.rotation.x=-1.0;
+  box(armR,0.19,0.14,0.17,SKY,0,-0.42,0.06);box(armR,0.195,0.145,0.03,0xffffff,0,-0.42,0.06,false);
+  const head=new THREE.Group();head.position.set(0,0.5,0);g.add(head);
+  box(head,0.5,0.46,0.46,SKIN,0,0,0);box(head,0.05,0.09,0.07,SKIN,-0.265,0.15,0);box(head,0.05,0.09,0.07,SKIN,0.265,0.15,0);
+  // hair: one thin slab on top, a back panel, short sides; the fringe steps down from a part on his left
+  box(head,0.54,0.08,0.5,HAIR,0,0.44,-0.01);box(head,0.54,0.3,0.08,HAIR,0,0.18,-0.22);
+  box(head,0.04,0.16,0.4,HAIR,-0.26,0.3,-0.04);box(head,0.04,0.16,0.4,HAIR,0.26,0.3,-0.04);
+  box(head,0.16,0.06,0.04,HAIR,-0.17,0.4,0.235,false);box(head,0.2,0.09,0.04,HAIR,0.0,0.37,0.235,false);box(head,0.15,0.12,0.04,HAIR,0.175,0.34,0.235,false);
+  // face: tall eyes with a shine, thin square glasses, rosy cheeks, a little smile
+  for(const ex of[-0.11,0.11]){
+    box(head,0.06,0.09,0.01,EYE,ex,0.17,0.232,false);box(head,0.025,0.03,0.01,0xffffff,ex+0.015,0.22,0.236,false);
+    box(head,0.15,0.016,0.01,FRAME,ex,0.29,0.24,false);box(head,0.15,0.016,0.01,FRAME,ex,0.135,0.24,false);
+    box(head,0.016,0.17,0.01,FRAME,ex-0.067,0.135,0.24,false);box(head,0.016,0.17,0.01,FRAME,ex+0.067,0.135,0.24,false);
+    box(head,0.08,0.035,0.008,PINK_,ex*1.8,0.1,0.232,false);
   }
-  box(head,0.06,0.012,0.01,0x2a2420,0,0.24,0.26,false);
-  box(head,0.12,0.04,0.01,0x7a2e2a,0,0.04,0.252,false);box(head,0.08,0.02,0.011,0xf08a6c,0,0.04,0.254,false);
-  box(head,0.03,0.025,0.01,0x7a2e2a,-0.07,0.075,0.252,false);box(head,0.03,0.025,0.01,0x7a2e2a,0.07,0.075,0.252,false);
+  box(head,0.07,0.014,0.01,FRAME,0,0.24,0.24,false);
+  box(head,0.08,0.018,0.01,MOUTH,0,0.06,0.232,false);box(head,0.02,0.02,0.01,MOUTH,-0.045,0.075,0.232,false);box(head,0.02,0.02,0.01,MOUTH,0.045,0.075,0.232,false);
   // floating hearts and sparkles
   const bits=[];
   for(let i=0;i<5;i++){
-    const m=new THREE.Mesh(geo(0.07,0.07,0.02),new THREE.MeshBasicMaterial({color:[PINK,SUN,0xffffff,CORAL,SKY2][i],transparent:true}));
+    const m=new THREE.Mesh(geo(0.07,0.07,0.02),new THREE.MeshBasicMaterial({color:[PINK_,SUN,0xffffff,CORAL,SKY2][i],transparent:true}));
     m.userData={ph:i/5,x:(i%2?1:-1)*(0.25+0.08*i)};g.add(m);bits.push(m);
   }
   const spot=new THREE.PointLight(0xffe2b0,0.5,7);spot.position.set(11.6,3.2,18.6);scene.add(spot);
@@ -621,13 +601,13 @@ const STATUE=(function(){
     say(){bubble.textContent=pick(LINES);bubble.hidden=false;sayUntil=t+3.5;wave=1.6;},
     tick(dt){
       t+=dt;
-      const hop=Math.abs(Math.sin(t*2.2));g.position.y=0.64+hop*0.05;g.scale.set(2.3*(1+(1-hop)*0.03),2.3*(1-(1-hop)*0.03),2.3);
+      const hop=Math.abs(Math.sin(t*2.2));g.position.y=0.57+hop*0.04;g.scale.set(2.3*(1+(1-hop)*0.025),2.3*(1-(1-hop)*0.025),2.3);
       armL.rotation.z=-2.5+Math.sin(t*(wave>0?14:6))*(wave>0?0.45:0.25);wave=Math.max(0,wave-dt);
-      head.rotation.z=Math.sin(t*1.1)*0.06;head.rotation.y=Math.sin(t*0.7)*0.15;
-      for(const m of bits){const p=(t*0.35+m.userData.ph)%1;m.position.set(m.userData.x,0.7+p*0.6,0.05);m.material.opacity=p<0.15?p/0.15:1-p;m.rotation.z=t*2+m.userData.ph*6;}
+      head.rotation.z=Math.sin(t*1.1)*0.05;head.rotation.y=Math.sin(t*0.7)*0.12;
+      for(const m of bits){const p=(t*0.35+m.userData.ph)%1;m.position.set(m.userData.x,0.75+p*0.6,0.05);m.material.opacity=p<0.15?p/0.15:1-p;m.rotation.z=t*2+m.userData.ph*6;}
       if(t>nextAuto){nextAuto=t+18+Math.random()*12;this.say();}
       if(t>sayUntil)bubble.hidden=true;
-      if(!bubble.hidden){head.getWorldPosition(tmpV);tmpV.y+=1.2;tmpV.project(camera);
+      if(!bubble.hidden){head.getWorldPosition(tmpV);tmpV.y+=1.3;tmpV.project(camera);
         tag.style.transform=`translate(${((tmpV.x*0.5+0.5)*stageW).toFixed(1)}px,${((-tmpV.y*0.5+0.5)*stageH).toFixed(1)}px) translate(-50%,-100%)`;}
     },
   };
