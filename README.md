@@ -43,6 +43,8 @@ Halaman dan datanya ada di `~/.claude/kantor-agent/`. Setiap sesi Claude Code me
 - **Creative studio ala Dapu:** pod meja Mac di atas karpet warna-warni, dinding tegel biru dengan logo dapu, pegboard, mood board ilustrasi, meja craft, UV printer, meja jahit, rak hampers, pojok foto produk berlatar biru, café, dan lounge.
 - **Baju funky:** kemeja garis dan baret, overall dan bucket hat, polkadot dan pita, hoodie tie-dye dan beanie kuping kucing, topi baling-baling, celemek cat, kemeja bunga dan kacamata hitam, sweater pelangi, topi kodok. Merah tetap untuk kerjaan kreatif, kolor untuk yang pakai tools.
 - **Putar otomatis:** tombol ⟳ (atau R). Habis kamu geser kameranya, dia muter lagi sendiri setelah 3 detik.
+- **Kamera bebas:** geser untuk pindah ke area mana pun; klik kanan atau Shift + geser untuk muter; scroll atau cubit untuk zoom; di HP putar dua jari untuk muter. Tombol ⌖ atau klik dua kali untuk balik ke tengah.
+- **Animasi kegiatan:** fotografer jongkok pakai kamera dan flash ("cekrek!"), atur lighting, selfie di logo, telepon klien, tidur di bean bag ("Zzz…"), selonjoran di sofa, gambar dan rakit di meja craft, jahit, cetak di UV printer, mikir di mood board, dan yang kerja di Mac sesekali ngulet.
 - **Klik orangnya:** dia jawab lewat balon omongan sesuai yang lagi dia kerjain.
 - **Panel ringkas:** Kerja, Santai, Beres, lalu satu baris per karyawan: lagi ngerjain apa, mulai jam berapa dan sudah berapa lama, atau selesai jam berapa.
 

@@ -133,12 +133,13 @@ button.row.sel{background:var(--raise);outline:2px solid var(--accent)}
     <div class="hud"><h1>KANTOR AGENT</h1><span class="clock" id="clock">--:--</span><span class="wallstat" id="wallStat"></span></div>
     <button type="button" class="wallexit" id="wallExit">Keluar mode wallpaper (W)</button>
     <div class="empty" id="empty"><b>Kantor masih sepi</b>Karyawan masuk sendiri begitu ada sesi Claude yang jalan.</div>
-    <div class="hint">Geser untuk putar, scroll untuk zoom</div>
+    <div class="hint">Geser untuk pindah · klik kanan/Shift + geser untuk putar · scroll untuk zoom · klik 2x untuk balik ke tengah</div>
     <div class="ctrl">
       <button type="button" id="rotL" aria-label="Putar kamera ke kiri">&#x21BA;</button>
       <button type="button" id="rotR" aria-label="Putar kamera ke kanan">&#x21BB;</button>
       <button type="button" id="zoomIn" aria-label="Perbesar">+</button>
       <button type="button" id="zoomOut" aria-label="Perkecil">&minus;</button>
+      <button type="button" id="homeBtn" aria-label="Balik ke tengah" title="Balik ke tengah (klik 2x di ruangan)">&#x2316;</button>
       <button type="button" id="spinBtn" aria-label="Putar otomatis" aria-pressed="true" title="Putar otomatis (R)">&#x27F3;</button>
       <button type="button" id="wallBtn" aria-label="Mode wallpaper" title="Mode wallpaper (W)">&#x26F6;</button>
     </div>
@@ -548,28 +549,28 @@ const POIS=[
   {cell:[25,4],seat:[25.3,4.3],seatH:0.72,rot:PI,text:'ngobrol santai',place:'meja bar',anim:'drink'},
   {cell:[26,4],seat:[26.7,4.3],seatH:0.72,rot:PI,text:'ngemil',place:'meja bar',anim:'stand'},
   {cell:[1,3],rot:-PI/2,text:'lihat pemandangan',place:'jendela',anim:'look'},
-  {cell:[1,7],rot:-PI/2,text:'telepon klien',place:'jendela',anim:'phone'},
-  {cell:[1,12],rot:-PI/2,text:'cari inspirasi',place:'mood board',anim:'look'},
-  {cell:[16,2],rot:PI,text:'foto di logo Dapu',place:'dinding logo',anim:'look'},
-  {cell:[4,1],rot:PI,text:'ambil alat',place:'pegboard',anim:'write'},
+  {cell:[1,7],rot:-PI/2,text:'telepon klien',place:'jendela',anim:'call'},
+  {cell:[1,12],rot:-PI/2,text:'cari inspirasi',place:'mood board',anim:'think'},
+  {cell:[16,2],rot:PI,text:'foto di logo Dapu',place:'dinding logo',anim:'selfie'},
+  {cell:[4,1],rot:PI,text:'ambil alat',place:'pegboard',anim:'reach'},
   {cell:[1,16],rot:-PI/2,text:'corat-coret ide',place:'whiteboard',anim:'write'},
   {cell:[2,19],rot:-PI/2,text:'isi botol minum',place:'dispenser',anim:'drink'},
-  {cell:[15,4],seat:[15,4.3],seatH:0.6,rot:0,text:'gambar ilustrasi',place:'meja craft',anim:'write'},
-  {cell:[16,4],seat:[16.5,4.3],seatH:0.6,rot:0,text:'rakit hampers',place:'meja craft',anim:'write'},
-  {cell:[18,7],seat:[18,7.7],seatH:0.6,rot:PI,text:'potong kain',place:'meja craft',anim:'write'},
-  {cell:[15,10],rot:PI,text:'cetak di UV printer',place:'UV printer',anim:'stand'},
-  {cell:[18,11],seat:[18,10.4],seatH:0.46,rot:PI,text:'jahit tote bag',place:'meja jahit',anim:'write'},
+  {cell:[15,4],seat:[15,4.3],seatH:0.6,rot:0,text:'gambar ilustrasi',place:'meja craft',anim:'craft'},
+  {cell:[16,4],seat:[16.5,4.3],seatH:0.6,rot:0,text:'rakit hampers',place:'meja craft',anim:'craft'},
+  {cell:[18,7],seat:[18,7.7],seatH:0.6,rot:PI,text:'potong kain',place:'meja craft',anim:'craft'},
+  {cell:[15,10],rot:PI,text:'cetak di UV printer',place:'UV printer',anim:'press'},
+  {cell:[18,11],seat:[18,10.4],seatH:0.46,rot:PI,text:'jahit tote bag',place:'meja jahit',anim:'sew'},
   {cell:[15,15],rot:0,text:'rapihin hampers',place:'rak hampers',anim:'look'},
   {cell:[24,9],seat:[24.5,8.6],seatH:0.38,rot:0,text:'rebahan bentar',place:'sofa',anim:'lounge'},
   {cell:[26,9],seat:[26.5,8.6],seatH:0.38,rot:0,text:'scroll HP',place:'sofa',anim:'phone'},
   {cell:[23,10],seat:[22.55,10.5],seatH:0.38,rot:PI/2,text:'baca berita',place:'sofa',anim:'phone'},
-  {cell:[24,13],seat:[24.5,12.6],seatH:0.5,rot:PI,text:'tiduran di bean bag',place:'bean bag',anim:'lounge'},
+  {cell:[24,13],seat:[24.5,12.6],seatH:0.5,rot:PI,text:'tiduran di bean bag',place:'bean bag',anim:'sleep'},
   {cell:[27,13],seat:[27.5,12.6],seatH:0.5,rot:PI,text:'main HP',place:'bean bag',anim:'phone'},
   {cell:[28,12],rot:PI/2,text:'main game',place:'arcade',anim:'play'},
-  {cell:[26,17],rot:PI,text:'foto produk',place:'pojok foto',anim:'phone'},
-  {cell:[25,18],rot:PI,text:'atur lighting',place:'pojok foto',anim:'look'},
-  {cell:[2,17],seat:[2.5,17],seatH:0.46,rot:PI/2,text:'meeting kecil',place:'meja diskusi',anim:'stand'},
-  {cell:[6,17],seat:[5.5,17],seatH:0.46,rot:-PI/2,text:'brainstorm',place:'meja diskusi',anim:'write'},
+  {cell:[26,17],rot:PI,text:'foto produk',place:'pojok foto',anim:'photo'},
+  {cell:[25,18],rot:PI,text:'atur lighting',place:'pojok foto',anim:'adjust'},
+  {cell:[2,17],seat:[2.5,17],seatH:0.46,rot:PI/2,text:'meeting kecil',place:'meja diskusi',anim:'talk'},
+  {cell:[6,17],seat:[5.5,17],seatH:0.46,rot:-PI/2,text:'brainstorm',place:'meja diskusi',anim:'think'},
   {cell:[20,9],rot:0,text:'cek stok krat',place:'gudang mini',anim:'look'},
 ];
 
@@ -724,6 +725,12 @@ class Agent{
     this.key=key;this.name=name;this.lookIdx=look%LOOKS.length;this.look=LOOKS[this.lookIdx];this.hex='#'+new THREE.Color(this.look.color).getHexString();
     this.desk=desk;
     this.m=buildCharacter(this.look);this.pos=this.m.root.position;if(desk)desk.claim(this);
+    {const ar=this.m.armR;
+     this.phone=box(ar,0.06,0.11,0.02,0x1b1a24,0,-0.5,0.08,false);box(this.phone,0.045,0.08,0.005,0x8fd0f5,0,-0.04,0.012,false);
+     this.cam=new THREE.Group();ar.add(this.cam);box(this.cam,0.18,0.11,0.09,0x1b1a24,-0.04,-0.5,0.08,false);box(this.cam,0.07,0.07,0.06,0x3a3846,-0.04,-0.48,0.15,false);box(this.cam,0.04,0.04,0.01,0x8fd0f5,-0.04,-0.465,0.18,false);
+     this.flash=new THREE.Mesh(new THREE.PlaneGeometry(0.5,0.5),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.9,depthWrite:false}));
+     this.flash.position.set(-0.04,-0.4,0.25);this.cam.add(this.flash);
+     this.phone.visible=this.cam.visible=this.flash.visible=false;this.flashAt=-9;}
     this.since=0;this.ended=0;this.lastTask='';this.sayText='';this.sayUntil=0;this.reactT=0;this.pokes=0;
     this.pos.set(from[0]+0.5,0,from[1]+0.5);
     this.rot=PI;this.rotTarget=PI;this.y=0;
@@ -731,7 +738,7 @@ class Agent{
     this.path=[];this.onArrive=null;this.lerp=null;
     this.task=null;this.tool='';this.poi=null;this.lastPoi=null;this.seat=null;this.sitting=false;this.seatH=0.38;
     this.t=rand(0,10);this.lastDone='';this.stroll=false;this.leaving=false;this.gone=false;
-    this.limbs={legL:0,legR:0,armL:0,armR:0,armLz:0,armRz:0,head:0,headY:0};
+    this.limbs={legL:0,legR:0,armL:0,armR:0,armLz:0,armRz:0,head:0,headY:0,headZ:0};
     const tag=document.createElement('div');tag.className='tag';
     this.bubbleEl=document.createElement('div');this.bubbleEl.className='bubble';this.bubbleEl.hidden=true;
     this.nameEl=document.createElement('div');this.nameEl.className='name';this.nameEl.textContent=name;this.nameEl.style.setProperty('--c',this.hex);
@@ -845,13 +852,24 @@ class Agent{
     this.animate(dt);
   }
   animate(dt){
-    this.t+=dt;const t=this.t,L=this.limbs,tg={legL:0,legR:0,armL:0,armR:0,armLz:0,armRz:0,head:0,headY:0};
+    this.t+=dt;const t=this.t,L=this.limbs,tg={legL:0,legR:0,armL:0,armR:0,armLz:0,armRz:0,head:0,headY:0,headZ:0};
+    let phone=false,cam=false;
     let y=0;
     const moving=this.state==='walking'||(this.state==='lerp'&&!this.sitting);
     if(this.sitting){
       tg.legL=tg.legR=-PI/2;y=this.seatH+0.02-0.38;
-      if(this.mode==='type'){tg.armL=-1.2+Math.sin(t*22)*0.16;tg.armR=-1.2+Math.sin(t*22+PI)*0.16;tg.head=0.12+Math.sin(t*1.7)*0.05;}
-      else if(this.mode==='phone'){tg.armL=tg.armR=-1.5;tg.armLz=-0.3;tg.armRz=0.3;tg.head=0.45;}
+      if(this.mode==='type'){
+        // every so often: a big stretch, then back to typing
+        if(t%15<1.3){tg.armL=tg.armR=-3.0;tg.armLz=-0.3;tg.armRz=0.3;tg.head=-0.35;}
+        else{tg.armL=-1.2+Math.sin(t*22)*0.16;tg.armR=-1.2+Math.sin(t*22+PI)*0.16;tg.head=0.12+Math.sin(t*1.7)*0.05;}
+      }
+      else if(this.mode==='phone'){tg.armL=tg.armR=-1.5;tg.armLz=-0.3;tg.armRz=0.3;tg.head=0.45;phone=true;}
+      else if(this.mode==='craft'){tg.armL=-1.05+Math.sin(t*6)*0.18;tg.armR=-1.15+Math.sin(t*8+1)*0.22;tg.armRz=Math.sin(t*3)*0.15;tg.head=0.35;tg.headY=Math.sin(t*0.7)*0.15;}
+      else if(this.mode==='sew'){tg.armL=-1.1;tg.armR=-1.1;tg.armLz=Math.sin(t*12)*0.08;tg.armRz=-Math.sin(t*12)*0.08;tg.head=0.4;tg.legL=-PI/2+Math.abs(Math.sin(t*10))*0.15;}
+      else if(this.mode==='sleep'){tg.armL=tg.armR=-0.15;tg.head=0.55;tg.headZ=0.35;y-=0.04;}
+      else if(this.mode==='lounge'){tg.armL=tg.armR=-2.9;tg.armLz=-0.7;tg.armRz=0.7;tg.head=-0.25;tg.legL=-1.3;tg.legR=-1.6;}
+      else if(this.mode==='think'){tg.armR=-2.4;tg.armRz=-0.75;tg.armL=-0.9;tg.head=-0.1;tg.headZ=0.15+Math.sin(t*0.8)*0.05;}
+      else if(this.mode==='talk'){tg.armL=-0.9+Math.sin(t*4)*0.35;tg.armR=-0.9+Math.sin(t*3+2)*0.35;tg.armLz=-0.2;tg.armRz=0.2;tg.headY=Math.sin(t*1.3)*0.3;}
       else{tg.armL=tg.armR=-0.25;tg.headY=Math.sin(t*0.6)*0.5;tg.head=-0.1;}
     }else if(moving){
       const s=Math.sin(t*11);tg.legL=s*0.6;tg.legR=-s*0.6;tg.armL=-s*0.5;tg.armR=s*0.5;y=Math.abs(Math.cos(t*11))*0.035;
@@ -862,6 +880,20 @@ class Agent{
         case'play':tg.armL=-1.15+Math.sin(t*26)*0.12;tg.armR=-1.15+Math.cos(t*19)*0.15;y=Math.abs(Math.sin(t*4))*0.02;break;
         case'look':tg.headY=Math.sin(t*0.8)*0.35;tg.head=-0.15;tg.armL=tg.armR=0.05;break;
         case'celebrate':y=Math.abs(Math.sin(t*9))*0.32;tg.armL=tg.armR=-2.9+Math.sin(t*9)*0.2;tg.armLz=-0.25;tg.armRz=0.25;break;
+        case'photo':{
+          // camera up to the eye, crouch for the low angle, flash
+          cam=true;tg.armR=tg.armL=-1.9;tg.armRz=-0.5;tg.armLz=0.5;
+          const c=t%4.2;if(c<1.6){tg.legL=-0.9;tg.legR=0.5;y=-0.12;}
+          tg.headY=Math.sin(t*0.9)*0.1;
+          if(c>1.2&&c<1.25||c>3.3&&c<3.35)this.flashAt=t;
+          break;}
+        case'adjust':tg.armR=-2.9+Math.sin(t*3)*0.15;tg.armRz=Math.sin(t*2)*0.2;tg.armL=-1.4;tg.head=-0.35;y=Math.abs(Math.sin(t*2))*0.03;break;
+        case'selfie':{phone=true;tg.armR=-2.3;tg.armRz=0.55;tg.armL=-2.6;tg.armLz=-0.5;tg.headZ=-0.18;tg.head=-0.15;y=Math.abs(Math.sin(t*3))*0.04;
+          if(t%3<0.05)this.flashAt=t;break;}
+        case'call':phone=true;tg.armR=-2.9;tg.armRz=-0.25;tg.armL=Math.sin(t*1.5)*0.3-0.4;tg.headY=Math.sin(t*0.9)*0.4;tg.head=Math.sin(t*2.3)*0.08;y=Math.abs(Math.sin(t*1.5))*0.015;break;
+        case'think':tg.armR=-2.4;tg.armRz=-0.75;tg.armL=-0.6;tg.armLz=0.3;tg.headZ=0.18;tg.head=-0.2+Math.sin(t*0.7)*0.05;break;
+        case'press':tg.armL=-1.3;tg.armR=-1.35+Math.max(0,Math.sin(t*5))*0.3;tg.head=0.35;tg.headY=Math.sin(t*0.5)*0.2;break;
+        case'reach':tg.armR=-3.0;tg.armRz=Math.sin(t*2)*0.15;tg.armL=-0.2;tg.head=-0.4;y=0.03+Math.abs(Math.sin(t*2.5))*0.02;break;
         default:tg.armL=Math.sin(t*2)*0.04;tg.armR=-tg.armL;tg.head=Math.sin(t*0.9)*0.04;
       }
     }
@@ -876,7 +908,9 @@ class Agent{
     const m=this.m;
     m.legL.rotation.x=L.legL;m.legR.rotation.x=L.legR;
     m.armL.rotation.x=L.armL;m.armR.rotation.x=L.armR;m.armL.rotation.z=L.armLz;m.armR.rotation.z=L.armRz;
-    m.head.rotation.x=L.head;m.head.rotation.y=L.headY;
+    m.head.rotation.x=L.head;m.head.rotation.y=L.headY;m.head.rotation.z=L.headZ;
+    this.phone.visible=phone&&!moving;this.cam.visible=cam&&!moving;
+    const fl=this.t-this.flashAt;this.flash.visible=cam&&fl>=0&&fl<0.12;
     if(m.prop)m.prop.rotation.y+=dt*(this.state==='walking'?22:9);
     this.pos.y=this.y;
     let dr=((this.rotTarget-this.rot+PI)%(2*PI)+2*PI)%(2*PI)-PI;
@@ -901,10 +935,18 @@ class Agent{
   bubble(){
     if(this.leaving)return null;
     if(performance.now()<this.sayUntil)return this.sayText;
+    if(this.mode==='type'&&this.state==='working'&&this.t%15<1.3)return'ngulet dulu';
     if(this.task&&(this.state==='working'||!this.desk))return(this.tool.split(':')[0]||'mikir…').slice(0,18);
     if(this.task)return'Ada tugas!';
     if(this.state==='celebrate')return'Beres!';
-    if(this.state==='atpoi'&&this.poi)return this.poi.text;
+    if(this.state==='atpoi'&&this.poi){
+      if(this.mode==='sleep')return'Zzz…';
+      if(this.mode==='photo'&&this.t-this.flashAt<0.9)return'cekrek!';
+      if(this.mode==='selfie'&&this.t%6<2)return'say cheese!';
+      if(this.mode==='call'&&this.t%7<2.5)return'halo kak, untuk hampersnya…';
+      if(this.mode==='press'&&this.t%5<1.5)return'brrr…';
+      return this.poi.text;
+    }
     return null;
   }
 }
@@ -1114,30 +1156,65 @@ function pickAt(cx,cy){
 function resize(){stageW=stage.clientWidth;stageH=stage.clientHeight;renderer.setSize(Math.max(1,stageW),Math.max(1,stageH),false);}
 new ResizeObserver(resize).observe(stage);resize();
 function placeCamera(){
-  const r=45;camera.position.set(CENTER.x+Math.sin(camAngle)*r,24,CENTER.z+Math.cos(camAngle)*r);
-  camera.lookAt(CENTER.x,0.7,CENTER.z);
+  const r=45;camera.position.set(focus.x+Math.sin(camAngle)*r,24,focus.z+Math.cos(camAngle)*r);
+  camera.lookAt(focus.x,0.7,focus.z);
   const aspect=stageW/stageH,vh=Math.max(24,38/aspect)*zoom*(aspect<1?0.6:1); // phones: start closer, the room is wider than the screen
   camera.left=-vh*aspect/2;camera.right=vh*aspect/2;camera.top=vh/2;camera.bottom=-vh/2;camera.updateProjectionMatrix();
   const ox=Math.sin(camAngle),oz=Math.cos(camAngle);
   for(const w of walls){const[nx,nz]=w.userData.n;w.visible=(ox*nx+oz*nz)<-0.15;}
 }
 $('#rotL').addEventListener('click',()=>{camTarget-=PI/2;});
+$('#homeBtn').addEventListener('click',()=>resetView());
 $('#rotR').addEventListener('click',()=>{camTarget+=PI/2;});
 $('#zoomIn').addEventListener('click',()=>{zoomTarget=Math.max(0.3,zoomTarget*0.85);});
 $('#zoomOut').addEventListener('click',()=>{zoomTarget=Math.min(1.5,zoomTarget/0.85);});
+/* Camera: drag to move around the room, right-drag (or Shift/Alt + drag) to turn, scroll or pinch to zoom.
+   On a phone: one finger moves, two fingers pinch to zoom and twist to turn. */
+const focus={x:CENTER.x,z:CENTER.z}, focusTarget={x:CENTER.x,z:CENTER.z};
+const ELEV=Math.atan2(24,45);
+function panBy(dx,dy){
+  const upp=(camera.right-camera.left)/Math.max(1,stageW),a=camAngle;
+  const rx=Math.cos(a),rz=-Math.sin(a),fx=-Math.sin(a),fz=-Math.cos(a),k=upp/Math.sin(ELEV);
+  focusTarget.x=Math.min(GW,Math.max(0,focusTarget.x-rx*dx*upp+fx*dy*k));
+  focusTarget.z=Math.min(GD,Math.max(0,focusTarget.z-rz*dx*upp+fz*dy*k));
+}
+function resetView(){focusTarget.x=CENTER.x;focusTarget.z=CENTER.z;zoomTarget=wall?0.95:1;}
 let drag=null;
 let downAt=null;
-canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX};downAt={x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId);});
+const touches=new Map();let pinch=null;
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+canvas.addEventListener('pointerdown',e=>{
+  canvas.setPointerCapture(e.pointerId);
+  touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(touches.size===2){
+    const[a,b]=[...touches.values()];
+    pinch={d:Math.hypot(a.x-b.x,a.y-b.y),ang:Math.atan2(b.y-a.y,b.x-a.x),zoom:zoomTarget,mx:(a.x+b.x)/2,my:(a.y+b.y)/2};
+    drag=null;downAt=null;return;
+  }
+  drag={x:e.clientX,y:e.clientY,turn:e.button===2||e.shiftKey||e.altKey};
+  downAt={x:e.clientX,y:e.clientY};
+});
+canvas.addEventListener('pointermove',e=>{
+  if(!touches.has(e.pointerId))return;
+  touches.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(touches.size===2&&pinch){
+    const[a,b]=[...touches.values()];
+    const d=Math.hypot(a.x-b.x,a.y-b.y),ang=Math.atan2(b.y-a.y,b.x-a.x),mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
+    zoomTarget=Math.min(1.5,Math.max(0.3,pinch.zoom*pinch.d/Math.max(1,d)));
+    let da=ang-pinch.ang;if(da>PI)da-=2*PI;if(da<-PI)da+=2*PI;
+    camTarget-=da;camAngle=camTarget;pinch.ang=ang;
+    panBy(mx-pinch.mx,my-pinch.my);pinch.mx=mx;pinch.my=my;
+    lastTouch=performance.now();return;
+  }
+  if(!drag)return;
+  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;
+  if(drag.turn){camTarget-=dx*0.008;camAngle=camTarget;}else panBy(dx,dy);
+  lastTouch=performance.now();
+});
 canvas.addEventListener('pointerup',e=>{if(downAt&&Math.hypot(e.clientX-downAt.x,e.clientY-downAt.y)<5)pickAt(e.clientX,e.clientY);downAt=null;});
-/* Two fingers pinch to zoom (iPhone, trackpad-less screens). */
-const touches=new Map();let pinchFrom=0,pinchZoom=1;
-canvas.addEventListener('pointerdown',e=>{touches.set(e.pointerId,{x:e.clientX,y:e.clientY});if(touches.size===2){const[a,b]=[...touches.values()];pinchFrom=Math.hypot(a.x-b.x,a.y-b.y);pinchZoom=zoomTarget;downAt=null;}});
-canvas.addEventListener('pointermove',e=>{if(!touches.has(e.pointerId))return;touches.set(e.pointerId,{x:e.clientX,y:e.clientY});if(touches.size===2&&pinchFrom){const[a,b]=[...touches.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);zoomTarget=Math.min(1.5,Math.max(0.3,pinchZoom*pinchFrom/Math.max(1,d)));}});
-const dropTouch=e=>{touches.delete(e.pointerId);if(touches.size<2)pinchFrom=0;};
-canvas.addEventListener('pointerup',dropTouch);canvas.addEventListener('pointercancel',dropTouch);
-canvas.addEventListener('pointermove',e=>{if(!drag||touches.size>1)return;const dx=e.clientX-drag.x;drag.x=e.clientX;camTarget-=dx*0.008;camAngle=camTarget;});
-const endDrag=()=>{drag=null;};
-canvas.addEventListener('pointerup',endDrag);canvas.addEventListener('pointercancel',endDrag);
+const endPointer=e=>{touches.delete(e.pointerId);if(touches.size<2)pinch=null;if(!touches.size)drag=null;};
+canvas.addEventListener('pointerup',endPointer);canvas.addEventListener('pointercancel',endPointer);
+canvas.addEventListener('dblclick',resetView);
 stage.addEventListener('wheel',e=>{e.preventDefault();zoomTarget=Math.min(1.5,Math.max(0.3,zoomTarget*(e.deltaY>0?1.08:0.92)));},{passive:false});
 window.addEventListener('keydown',e=>{if(e.target.closest&&e.target.closest('input'))return;if(e.key==='q'||e.key==='Q')camTarget-=PI/2;if(e.key==='e'||e.key==='E')camTarget+=PI/2;if(e.key==='w'||e.key==='W')setWall(!wall);if(e.key==='Escape'&&wall)setWall(false);});
 
@@ -1155,7 +1232,6 @@ function setWall(on){
 $('#wallBtn').addEventListener('click',()=>setWall(true));
 $('#wallExit').addEventListener('click',()=>setWall(false));
 canvas.addEventListener('pointerdown',()=>{lastTouch=performance.now();});
-canvas.addEventListener('pointermove',()=>{if(drag)lastTouch=performance.now();});
 /* Auto spin: on by default, remembered per device. Dragging pauses it, and it picks up again 3 seconds after you let go. */
 let spin=true;try{spin=localStorage.getItem('kantor-spin')!=='0';}catch(e){}
 function setSpin(on){spin=on;$('#spinBtn').setAttribute('aria-pressed',String(on));try{localStorage.setItem('kantor-spin',on?'1':'0');}catch(e){}}
@@ -1174,6 +1250,7 @@ function frame(now){
   const dt=Math.min(0.05,(now-last)/1000);last=now;time+=dt;
   if((wall||spin)&&!drag&&now-lastTouch>3000)camTarget+=dt*0.035;
   camAngle+=(camTarget-camAngle)*Math.min(1,dt*6);zoom+=(zoomTarget-zoom)*Math.min(1,dt*8);
+  focus.x+=(focusTarget.x-focus.x)*Math.min(1,dt*12);focus.z+=(focusTarget.z-focus.z)*Math.min(1,dt*12);
   placeCamera();
   for(const[key,a]of agents){if(a.gone){agents.delete(key);continue;}a.update(dt);}
   screenT-=dt;if(screenT<=0){screenT=0.12;DESKS.forEach(d=>drawDesk(d,time));drawArcade();}
