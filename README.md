@@ -49,6 +49,17 @@ Halaman dan datanya ada di `~/.claude/kantor-agent/`. Setiap sesi Claude Code me
 - **Klik orangnya:** dia jawab lewat balon omongan sesuai yang lagi dia kerjain.
 - **Panel ringkas:** Kerja, Santai, Beres, lalu satu baris per karyawan: lagi ngerjain apa, mulai jam berapa dan sudah berapa lama, atau selesai jam berapa.
 
+## Kantor 0.10
+
+- **Gudang Dapu:** rak stok, meja packing, palet paket keluar, dan pintu bongkar muat. Tim packing (3 orang) selalu kerja: ambil barang, packing, taruh di palet. Jam 22.00 sampai 06.00 tinggal satu yang shift malam. Kurir motor datang tiap beberapa menit (07.00 sampai 21.00) ambil paket.
+- **Siang dan malam ikut jam Jakarta:** langit di jendela berubah, lampu tumblr menyala malam hari, karyawan nguap lewat tengah malam dan ketiduran di meja jam 1 sampai 5 pagi.
+- **Error jadi drama:** tool yang gagal ditandai ⚠, karyawannya panik, layarnya merah, monitornya berasap.
+- **Level kantor:** tiap tugas beres = 1 XP. Tiap level membuka barang baru: lampu tumblr, akuarium, neon sign, gerobak es krim, bola disko, kucing kantor, lemari piala, robot vakum, patung emas.
+- **Karyawan Terbaik:** jam 17.00 patung Andrew mengumumkan karyawan paling rajin hari itu; dia dapat piala di atas kepala sampai besok.
+- **Papan penjualan (ala-ala):** di dinding gudang. Tiap tugas beres dihitung satu closing: bel bunyi, semua tepuk tangan.
+- **Tombol baru:** 🔇 suara (musik lofi + suara kantor, atau suara kantor saja), 🚶 jalan-jalan jadi Bos Andrew (WASD/panah, Spasi kasih kopi, di HP ketuk lantai), ⏪ replay hari ini dalam 60 detik, 📷 foto polaroid.
+- Level, statistik harian, dan rekaman replay disimpan di perangkat masing-masing, dan rekaman hanya jalan selama halaman kantornya terbuka.
+
 ## Install
 
 Di prompt sesi terminal:

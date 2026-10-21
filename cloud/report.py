@@ -128,6 +128,11 @@ def main():
         a["used"] = a["tool"]
         if not a["task"]:
             a["task"] = a["name"]
+    elif ev == "PostToolUseFailure":
+        # a failed tool shows as "⚠ <tool>" and the 3D office plays a small panic
+        a = agent(aid, nice_type(e.get("agent_type"))) if aid else main_a
+        a.update(status="working", tool=("⚠ " + tool_label(e.get("tool_name"), e.get("tool_input")))[:60])
+        a["used"] = a["tool"]
     elif ev == "SubagentStart" and aid:
         a = agent(aid, nice_type(e.get("agent_type")))
         a.update(status="working", task=a["task"] or a["name"])

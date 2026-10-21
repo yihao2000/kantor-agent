@@ -313,7 +313,13 @@ export const register: Register = on => {
     const now = await $.clock.now()
     const label = toolLabel(String(e.tool), e as unknown as Record<string, unknown>)
     await update($, office, o => noteTool(o, e.agentId ?? MAIN, label, now))
-    return next(e)
+    const ran = await next(e)
+    // A failed tool shows as "⚠ <tool>": the 3D office turns it into a small panic at the desk.
+    if (ran && 'isError' in ran && ran.isError) {
+      await update($, office, o => noteTool(o, e.agentId ?? MAIN, '⚠ ' + label, now))
+      await publish($)
+    }
+    return ran
   })
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
